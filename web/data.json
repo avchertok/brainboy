@@ -1,5 +1,29 @@
 {
-  "generated_at": "2026-08-29T09:02:12.150546+00:00",
+  "generated_at": "2026-08-29T09:24:37.926802+00:00",
+  "rounds_count": 8,
+  "seasons": [],
   "games": [],
-  "standings": []
+  "scopes": {
+    "all": {
+      "standings": [],
+      "history": {
+        "dates": [],
+        "series": []
+      }
+    }
+  },
+  "round_stats": {
+    "teams": [],
+    "overall_avgs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "captain_leader": null
+  }
 }

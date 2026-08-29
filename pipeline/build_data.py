@@ -6,22 +6,34 @@
       "team_aliases": {"вариант названия": "Каноническое имя"},
       "games": [
         {"date": "YYYY-MM-DD", "title": "...", "venue": "...",
-         "teams": [{"name": "...", "score": число, "place": число}]}
+         "teams": [{"name": "...", "place": число,
+                    "rounds": [8 чисел или null], "total": число}]}
       ]
     }
 
-Скрипт применяет алиасы, считает стендинг по командам и пишет web/data.json.
-Если data/results.json отсутствует — создаёт пустой каркас.
+Сезон = календарный год даты игры (вычисляется здесь, в results.json не
+хранится). Скрипт считает:
+  - стендинги за всё время и по каждому сезону в двух системах:
+    "по сумме очков" (сумма total) и "олимпийская" (1 место = 3, 2 = 2, 3 = 1);
+  - историю накопительного рейтинга по датам игр (для графика) в обеих системах;
+  - статистику по раундам: средние очки команд по каждому из 8 раундов
+    и лидера капитанского конкурса (8-й раунд).
+
+Всё пишется одной структурой в web/data.json.
 """
 
 import argparse
 import json
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_PATH = PROJECT_ROOT / "data" / "results.json"
 OUTPUT_PATH = PROJECT_ROOT / "web" / "data.json"
+
+ROUNDS_COUNT = 8
+OLYMPIC_POINTS = {1: 3, 2: 2, 3: 1}
 
 EMPTY_RESULTS = {"team_aliases": {}, "games": []}
 
@@ -45,59 +57,168 @@ def canonical_name(name, aliases):
     return aliases.get(name, name)
 
 
-def build_standings(games, aliases):
-    """Aggregate per-team standings across all games."""
-    teams = {}
-    sorted_games = sorted(games, key=lambda g: g.get("date") or "")
+def season_of(game):
+    """Season = calendar year of the game date."""
+    date = game.get("date") or ""
+    return date[:4] if len(date) >= 4 else None
 
-    for game in sorted_games:
-        for entry in game.get("teams", []):
-            name = canonical_name(entry["name"], aliases)
+
+def normalize_games(games, aliases):
+    """Sorted games with canonical team names, padded rounds and season."""
+    result = []
+    for game in sorted(games, key=lambda g: g.get("date") or ""):
+        game = dict(game)
+        game["season"] = season_of(game)
+        teams = []
+        for t in game.get("teams", []):
+            t = dict(t)
+            t["name"] = canonical_name(t["name"], aliases)
+            rounds = list(t.get("rounds") or [])
+            t["rounds"] = rounds[:ROUNDS_COUNT] + [None] * (
+                ROUNDS_COUNT - len(rounds)
+            )
+            if t.get("total") is None:
+                known = [r for r in t["rounds"] if r is not None]
+                t["total"] = sum(known) if known else 0
+            teams.append(t)
+        teams.sort(key=lambda t: (t.get("place") is None, t.get("place")))
+        game["teams"] = teams
+        result.append(game)
+    return result
+
+
+def olympic_for_place(place):
+    return OLYMPIC_POINTS.get(place, 0)
+
+
+def build_standings(games):
+    """Per-team standings for a list of games (one scope)."""
+    teams = {}
+    for game in games:
+        for entry in game["teams"]:
             team = teams.setdefault(
-                name,
+                entry["name"],
                 {
-                    "name": name,
+                    "name": entry["name"],
                     "games_played": 0,
                     "wins": 0,
-                    "total_score": 0,
+                    "podiums": 0,
+                    "points": 0,
+                    "olympic": 0,
                     "best_place": None,
-                    "history": [],
                 },
             )
-            score = entry.get("score", 0)
             place = entry.get("place")
+            total = entry.get("total") or 0
             team["games_played"] += 1
-            team["total_score"] += score
+            team["points"] += total
+            team["olympic"] += olympic_for_place(place)
             if place == 1:
                 team["wins"] += 1
+            if place is not None and place <= 3:
+                team["podiums"] += 1
             if place is not None and (
                 team["best_place"] is None or place < team["best_place"]
             ):
                 team["best_place"] = place
-            team["history"].append(
-                {"date": game.get("date"), "score": score, "place": place}
-            )
 
     standings = []
     for team in teams.values():
-        team["avg_score"] = round(team["total_score"] / team["games_played"], 1)
+        team["avg_points"] = round(team["points"] / team["games_played"], 1)
         standings.append(team)
+    # Базовая сортировка — по сумме очков; страница пересортирует сама
+    standings.sort(key=lambda t: (-t["points"], -t["olympic"], t["name"]))
+    return standings
 
-    standings.sort(key=lambda t: (-t["wins"], -t["total_score"]))
-    return standings, sorted_games
 
+def build_history(games):
+    """Cumulative rating history by game date, both systems.
 
-def apply_aliases_to_games(games, aliases):
-    """Return games with canonical team names (for the web page)."""
-    result = []
+    Returns {"dates": [...], "series": [{"name", "points": [...], "olympic": [...]}]}.
+    До первой игры команды — null, дальше значение переносится вперёд.
+    """
+    dates = sorted({g["date"] for g in games if g.get("date")})
+    date_index = {d: i for i, d in enumerate(dates)}
+    per_team = defaultdict(lambda: {"points": [None] * len(dates),
+                                    "olympic": [None] * len(dates)})
+
     for game in games:
-        game = dict(game)
-        game["teams"] = [
-            {**t, "name": canonical_name(t["name"], aliases)}
-            for t in game.get("teams", [])
-        ]
-        result.append(game)
-    return result
+        idx = date_index.get(game.get("date"))
+        if idx is None:
+            continue
+        for entry in game["teams"]:
+            slot = per_team[entry["name"]]
+            gained = entry.get("total") or 0
+            slot["points"][idx] = (slot["points"][idx] or 0) + gained
+            slot["olympic"][idx] = (slot["olympic"][idx] or 0) + olympic_for_place(
+                entry.get("place")
+            )
+
+    series = []
+    for name in sorted(per_team):
+        slot = per_team[name]
+        for key in ("points", "olympic"):
+            running = None
+            values = []
+            for v in slot[key]:
+                if v is not None:
+                    running = (running or 0) + v
+                values.append(running)
+            slot[key] = values
+        series.append({"name": name, **slot})
+    return {"dates": dates, "series": series}
+
+
+def build_round_stats(games):
+    """Average points per round per team + captain's round leader."""
+    per_team = defaultdict(lambda: [[] for _ in range(ROUNDS_COUNT)])
+    for game in games:
+        for entry in game["teams"]:
+            for i, value in enumerate(entry["rounds"][:ROUNDS_COUNT]):
+                if value is not None:
+                    per_team[entry["name"]][i].append(value)
+
+    teams = []
+    overall = [[] for _ in range(ROUNDS_COUNT)]
+    for name in sorted(per_team):
+        avgs = []
+        for i, values in enumerate(per_team[name]):
+            overall[i].extend(values)
+            avgs.append(round(sum(values) / len(values), 2) if values else None)
+        teams.append(
+            {
+                "name": name,
+                "round_avgs": avgs,
+                "games": max(len(v) for v in per_team[name]),
+            }
+        )
+
+    overall_avgs = [
+        round(sum(v) / len(v), 2) if v else None for v in overall
+    ]
+
+    # Лидер капитанского конкурса — лучший средний результат в 8-м раунде
+    captain_leader = None
+    for team in teams:
+        avg = team["round_avgs"][ROUNDS_COUNT - 1]
+        if avg is None:
+            continue
+        if captain_leader is None or avg > captain_leader["avg"]:
+            captain_leader = {"name": team["name"], "avg": avg}
+
+    return {
+        "teams": teams,
+        "overall_avgs": overall_avgs,
+        "captain_leader": captain_leader,
+    }
+
+
+def build_scope(games):
+    """Standings + history for one scope (all time or one season)."""
+    return {
+        "standings": build_standings(games),
+        "history": build_history(games),
+    }
 
 
 def main():
@@ -117,13 +238,20 @@ def main():
 
     results = load_results(Path(args.results))
     aliases = results.get("team_aliases", {})
-    games = results.get("games", [])
+    games = normalize_games(results.get("games", []), aliases)
 
-    standings, sorted_games = build_standings(games, aliases)
+    seasons = sorted({g["season"] for g in games if g["season"]})
+    scopes = {"all": build_scope(games)}
+    for season in seasons:
+        scopes[season] = build_scope([g for g in games if g["season"] == season])
+
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "games": apply_aliases_to_games(sorted_games, aliases),
-        "standings": standings,
+        "rounds_count": ROUNDS_COUNT,
+        "seasons": seasons,
+        "games": games,
+        "scopes": scopes,
+        "round_stats": build_round_stats(games),
     }
 
     out_path = Path(args.output)
@@ -131,7 +259,8 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print(f"Игр: {len(games)}, команд: {len(standings)}")
+    n_teams = len(scopes["all"]["standings"])
+    print(f"Игр: {len(games)}, команд: {n_teams}, сезонов: {len(seasons)}")
     print(f"Записано: {out_path}")
 
 

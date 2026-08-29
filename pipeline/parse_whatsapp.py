@@ -24,9 +24,10 @@ RAW_DIR = PROJECT_ROOT / "data" / "raw"
 LRM = "\u200e"
 
 # iOS: [25.08.2024, 21:14:33] Author: text  (дата бывает DD.MM.YYYY или MM/DD/YY,
-# секунды опциональны, в начале строки возможен LRM)
+# секунды опциональны, время бывает 12-часовое с AM/PM, в начале строки возможен LRM)
 IOS_RE = re.compile(
-    r"^\u200e?\[(?P<date>[\d./]+),\s*(?P<time>\d{1,2}:\d{2}(?::\d{2})?)\]\s*"
+    r"^\u200e?\[(?P<date>[\d./]+),\s*"
+    r"(?P<time>\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][Mm])?)\]\s*"
     r"(?P<author>[^:]+?):\s?(?P<text>.*)$"
 )
 
@@ -40,14 +41,25 @@ IOS_ATTACH_RE = re.compile(r"\u200e?<attached:\s*(?P<file>[^>]+)>")
 ANDROID_ATTACH_RE = re.compile(
     r"(?P<file>\S+)\s+\((?:file attached|файл добавлен)\)", re.IGNORECASE
 )
-MEDIA_OMITTED_RE = re.compile(r"<(?:Media omitted|Без медиафайлов)>", re.IGNORECASE)
+# "<Media omitted>" (Android), "<image omitted>" / "<video omitted>" и т.п. (iOS)
+MEDIA_OMITTED_RE = re.compile(
+    r"<\u200e?(?:Media|image|video|audio|sticker|GIF|document|Contact card) omitted>"
+    r"|<Без медиафайлов>",
+    re.IGNORECASE,
+)
 
 DATE_FORMATS = ["%d.%m.%Y", "%d.%m.%y", "%m/%d/%y", "%m/%d/%Y", "%d/%m/%Y", "%d/%m/%y"]
 
 
 def parse_timestamp(date_str, time_str):
     """Return ISO timestamp or None if the date/time cannot be parsed."""
-    time_fmt = "%H:%M:%S" if time_str.count(":") == 2 else "%H:%M"
+    time_str = time_str.strip()
+    has_ampm = time_str[-1] in "mM"
+    hour_fmt = "%I" if has_ampm else "%H"
+    seconds = ":%S" if time_str.count(":") == 2 else ""
+    ampm = " %p" if has_ampm else ""
+    time_fmt = f"{hour_fmt}:%M{seconds}{ampm}"
+    time_str = re.sub(r"\s*([APap][Mm])$", r" \1", time_str).upper()
     for date_fmt in DATE_FORMATS:
         try:
             dt = datetime.strptime(f"{date_str} {time_str}", f"{date_fmt} {time_fmt}")
