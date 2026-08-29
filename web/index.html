@@ -15,6 +15,20 @@
     --accent-soft: #eef1fe;
     --border: #e5e8f0;
     --gold: #f5b301;
+    --place1-bg: #fff9e6;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    --bg: #14161d;
+    --card: #1d2129;
+    --text: #e7eaf3;
+    --muted: #98a1b3;
+    --accent: #6b85ff;
+    --accent-soft: #272e44;
+    --border: #2d3340;
+    --gold: #f5c542;
+    --place1-bg: #2e2a1a;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -26,6 +40,23 @@
   }
   .container { max-width: 1000px; margin: 0 auto; padding: 32px 16px 64px; }
   header { margin-bottom: 24px; }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  #theme-toggle {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+  }
   h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
   .subtitle { color: var(--muted); margin-top: 4px; }
   h2 { font-size: 1.3rem; margin: 40px 0 14px; letter-spacing: -0.01em; }
@@ -127,7 +158,7 @@
     font-variant-numeric: tabular-nums;
   }
   .game td.round.captain, .game th.round.captain { background: var(--accent-soft); }
-  .place-1 td { background: #fff9e6; }
+  .place-1 td { background: var(--place1-bg); }
 
   .captain-note {
     color: var(--muted); font-size: 0.8rem; margin-top: 8px;
@@ -176,12 +207,29 @@
     .game { padding: 12px 14px; }
   }
 </style>
+<script>
+(function () {
+  let t = null;
+  try { t = localStorage.getItem("theme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") {
+    t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark" : "light";
+  }
+  document.documentElement.dataset.theme = t;
+})();
+</script>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>BrainBoy — рейтинг команд</h1>
-    <p class="subtitle">Результаты игр по воскресеньям: 8 раундов, последний — капитанский конкурс</p>
+    <div class="header-top">
+      <div>
+        <h1>BrainBoy — рейтинг команд</h1>
+        <p class="subtitle">Результаты игр по воскресеньям: 8 раундов, последний — капитанский конкурс</p>
+      </div>
+      <button id="theme-toggle" type="button" title="Переключить тему"
+        aria-label="Переключить светлую/тёмную тему">🌙</button>
+    </div>
   </header>
 
   <div id="app"></div>
@@ -219,6 +267,13 @@ const PALETTE = [
   "#8d6e63", "#00897b",
 ];
 
+/* те же акценты, но осветлённые для читаемости на тёмном фоне */
+const PALETTE_DARK = [
+  "#7f95ff", "#ff7a7f", "#3fc98b", "#ffcb45", "#bd85ea",
+  "#3fc4dc", "#ff9c4a", "#ff7dbb", "#93a5ba", "#5ee394",
+  "#bd9a8e", "#2cbfab",
+];
+
 const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 /* ---------- состояние переключателей ---------- */
@@ -230,6 +285,31 @@ const state = {
 
 let DATA = null;
 let ratingChart = null;
+
+/* ---------- тема ---------- */
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("theme", theme); } catch (e) {}
+  const btn = document.getElementById("theme-toggle");
+  if (btn) btn.textContent = theme === "dark" ? "☀️" : "🌙";
+  if (ratingChart) updateRatingChart();
+}
+
+/* цвета интерфейса графика из CSS-переменных текущей темы */
+function chartUiColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => (cs.getPropertyValue(name) || "").trim() || fallback;
+  return {
+    text: v("--text", "#1c2333"),
+    muted: v("--muted", "#6b7385"),
+    grid: v("--border", "#e5e8f0"),
+  };
+}
 
 /* ---------- пустой стейт ---------- */
 
@@ -327,42 +407,145 @@ function renderRatingBlock() {
     <div class="chart-wrap"><canvas id="ratingChart"></canvas></div>`;
 }
 
+/* Подписи команд справа от последних точек линий (вместо легенды).
+   Подписываются только топ-N команд текущего скоупа/системы, иначе
+   40 подписей не разместить; остальные видны через тултип. */
+const LABELED_TEAMS = 10;
+const LINE_LABEL_FONT = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const LINE_LABEL_GAP = 12;
+
+function lastNonNullIndex(arr) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] != null) return i;
+  }
+  return -1;
+}
+
+const lineLabelsPlugin = {
+  id: "lineLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    const labels = [];
+    chart.data.datasets.forEach((ds, i) => {
+      if (!ds.showLineLabel || !chart.isDatasetVisible(i)) return;
+      const idx = lastNonNullIndex(ds.data);
+      if (idx < 0) return;
+      const pt = chart.getDatasetMeta(i).data[idx];
+      if (!pt) return;
+      labels.push({ text: ds.label, color: ds.borderColor, x: pt.x, y: pt.y });
+    });
+    if (!labels.length) return;
+
+    // разводим перекрытия: сортировка по y, минимальный зазор сверху вниз,
+    // затем обратный проход, если нижние вышли за границу области
+    labels.sort((a, b) => a.y - b.y);
+    let prev = chartArea.top - LINE_LABEL_GAP;
+    for (const l of labels) {
+      l.ty = Math.max(l.y, prev + LINE_LABEL_GAP);
+      prev = l.ty;
+    }
+    if (prev > chartArea.bottom) {
+      let next = chartArea.bottom + LINE_LABEL_GAP;
+      for (let i = labels.length - 1; i >= 0; i--) {
+        labels[i].ty = Math.min(labels[i].ty, next - LINE_LABEL_GAP);
+        next = labels[i].ty;
+      }
+    }
+
+    ctx.save();
+    ctx.font = LINE_LABEL_FONT;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    for (const l of labels) {
+      ctx.fillStyle = l.color;
+      ctx.fillText(l.text, l.x + 8, l.ty);
+    }
+    ctx.restore();
+  },
+};
+
 function updateRatingChart() {
   const scope = DATA.scopes[state.season] || DATA.scopes.all;
   const history = scope.history;
   const key = state.system;
+  const palette = currentTheme() === "dark" ? PALETTE_DARK : PALETTE;
+  const ui = chartUiColors();
+
+  // топ-N команд по итоговому значению рейтинга — только им рисуем подписи
+  const finals = history.series.map((team, i) => {
+    const idx = lastNonNullIndex(team[key]);
+    return { i, value: idx >= 0 ? team[key][idx] : -Infinity };
+  });
+  finals.sort((a, b) => b.value - a.value);
+  const labeledIdx = new Set(finals.slice(0, LABELED_TEAMS).map((f) => f.i));
 
   const datasets = history.series.map((team, i) => ({
     label: team.name,
     data: team[key],
-    borderColor: PALETTE[i % PALETTE.length],
-    backgroundColor: PALETTE[i % PALETTE.length],
+    borderColor: palette[i % palette.length],
+    backgroundColor: palette[i % palette.length],
     spanGaps: true,
     tension: 0.25,
-    pointRadius: 3,
+    pointRadius: 2,
+    pointHoverRadius: 5,
+    borderWidth: 2,
+    showLineLabel: labeledIdx.has(i),
   }));
+
+  // правый отступ — под самую длинную из отображаемых подписей
+  const canvas = document.getElementById("ratingChart");
+  const mctx = canvas.getContext && canvas.getContext("2d");
+  let padRight = 24;
+  if (mctx) {
+    mctx.save();
+    mctx.font = LINE_LABEL_FONT;
+    for (const ds of datasets) {
+      if (ds.showLineLabel) {
+        padRight = Math.max(padRight, mctx.measureText(ds.label).width + 16);
+      }
+    }
+    mctx.restore();
+  }
 
   const config = {
     type: "line",
     data: { labels: history.dates.map(fmtDate), datasets },
     options: {
       responsive: true,
-      interaction: { mode: "index", intersect: false },
-      plugins: { legend: { position: "bottom" } },
+      layout: { padding: { right: Math.min(Math.ceil(padRight), 180) } },
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (item) => `${item.dataset.label}: ${item.formattedValue}`,
+          },
+        },
+      },
       scales: {
+        x: {
+          ticks: { color: ui.muted },
+          grid: { color: ui.grid },
+        },
         y: {
           beginAtZero: true,
+          ticks: { color: ui.muted },
+          grid: { color: ui.grid },
           title: {
             display: true,
             text: key === "points" ? "Сумма очков" : "Олимпийские очки",
+            color: ui.text,
           },
         },
       },
     },
+    plugins: [lineLabelsPlugin],
   };
 
   if (ratingChart) ratingChart.destroy();
-  ratingChart = new Chart(document.getElementById("ratingChart"), config);
+  ratingChart = new Chart(canvas, config);
 }
 
 function refreshRating() {
@@ -372,44 +555,6 @@ function refreshRating() {
   document.querySelectorAll("#system-seg button").forEach((b) =>
     b.classList.toggle("active", b.dataset.system === state.system));
   updateRatingChart();
-}
-
-/* ---------- статистика по раундам ---------- */
-
-function renderRoundStats() {
-  const stats = DATA.round_stats;
-  if (!stats || !stats.teams.length) return "";
-  const n = DATA.rounds_count;
-
-  const leader = stats.captain_leader ? `
-    <div class="leader-badge">🎩 Лидер капитанского конкурса:
-      <span class="who">${esc(stats.captain_leader.name)}</span>
-      <span>(в среднем ${stats.captain_leader.avg} очк. в 8-м раунде)</span>
-    </div>` : "";
-
-  const header = Array.from({ length: n }, (_, i) =>
-    `<th class="num">Р${i + 1}${i === n - 1 ? " 🎩" : ""}</th>`).join("");
-  const rows = stats.teams.map((t) => `
-    <tr>
-      <td class="team-name">${esc(t.name)}</td>
-      ${t.round_avgs.map((v) => `<td class="num">${v ?? "—"}</td>`).join("")}
-    </tr>`).join("");
-  const overall = `
-    <tr>
-      <td class="team-name" style="color:var(--muted)">Среднее по всем</td>
-      ${stats.overall_avgs.map((v) => `<td class="num" style="color:var(--muted)">${v ?? "—"}</td>`).join("")}
-    </tr>`;
-
-  return `
-    <h2>Статистика по раундам</h2>
-    ${leader}
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Команда (средние очки)</th>${header}</tr></thead>
-        <tbody>${rows}${overall}</tbody>
-      </table>
-    </div>
-    <p class="captain-note">🎩 — 8-й раунд, капитанский конкурс.</p>`;
 }
 
 /* ---------- игры по датам ---------- */
@@ -459,6 +604,14 @@ function renderGames() {
 
 /* ---------- инициализация ---------- */
 
+function attachThemeToggle() {
+  const themeBtn = document.getElementById("theme-toggle");
+  if (!themeBtn) return;
+  themeBtn.textContent = currentTheme() === "dark" ? "☀️" : "🌙";
+  themeBtn.addEventListener("click", () =>
+    setTheme(currentTheme() === "dark" ? "light" : "dark"));
+}
+
 function attachHandlers() {
   const seasonSeg = document.getElementById("season-seg");
   if (seasonSeg) seasonSeg.addEventListener("click", (e) => {
@@ -477,6 +630,7 @@ function attachHandlers() {
 }
 
 async function init() {
+  attachThemeToggle();
   const app = document.getElementById("app");
   let data;
   try {
@@ -494,7 +648,6 @@ async function init() {
     app.innerHTML =
       renderSummary() +
       renderRatingBlock() +
-      renderRoundStats() +
       renderGames();
     attachHandlers();
     updateRatingChart();
