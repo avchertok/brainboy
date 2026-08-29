@@ -49,9 +49,37 @@ MEDIA_OMITTED_RE = re.compile(
 )
 
 DATE_FORMATS = ["%d.%m.%Y", "%d.%m.%y", "%m/%d/%y", "%m/%d/%Y", "%d/%m/%Y", "%d/%m/%y"]
+DAY_FIRST_FORMATS = ["%d.%m.%Y", "%d.%m.%y", "%d/%m/%Y", "%d/%m/%y", "%m/%d/%y", "%m/%d/%Y"]
+MONTH_FIRST_FORMATS = ["%m/%d/%y", "%m/%d/%Y", "%d.%m.%Y", "%d.%m.%y", "%d/%m/%Y", "%d/%m/%y"]
+
+DATE_TOKEN_RE = re.compile(r"^\u200e?\[?(\d{1,2})[./](\d{1,2})[./]\d{2,4},")
 
 
-def parse_timestamp(date_str, time_str):
+def detect_date_formats(chat_path):
+    """Scan all date tokens to disambiguate day-first vs month-first ordering.
+
+    Слэш-даты неоднозначны (12/07 = 12 июля или 7 декабря): смотрим на весь
+    файл — если первый компонент бывает >12, это день; если второй — месяц.
+    """
+    first_gt12 = second_gt12 = False
+    with open(chat_path, encoding="utf-8") as f:
+        for line in f:
+            m = DATE_TOKEN_RE.match(line)
+            if m:
+                if int(m.group(1)) > 12:
+                    first_gt12 = True
+                if int(m.group(2)) > 12:
+                    second_gt12 = True
+            if first_gt12 and second_gt12:
+                break
+    if first_gt12 and not second_gt12:
+        return DAY_FIRST_FORMATS
+    if second_gt12 and not first_gt12:
+        return MONTH_FIRST_FORMATS
+    return DATE_FORMATS
+
+
+def parse_timestamp(date_str, time_str, date_formats=DATE_FORMATS):
     """Return ISO timestamp or None if the date/time cannot be parsed."""
     time_str = time_str.strip()
     has_ampm = time_str[-1] in "mM"
@@ -60,7 +88,7 @@ def parse_timestamp(date_str, time_str):
     ampm = " %p" if has_ampm else ""
     time_fmt = f"{hour_fmt}:%M{seconds}{ampm}"
     time_str = re.sub(r"\s*([APap][Mm])$", r" \1", time_str).upper()
-    for date_fmt in DATE_FORMATS:
+    for date_fmt in date_formats:
         try:
             dt = datetime.strptime(f"{date_str} {time_str}", f"{date_fmt} {time_fmt}")
             return dt.isoformat()
@@ -90,11 +118,11 @@ def extract_attachments(text):
     return text.strip().strip(LRM), attachments
 
 
-def parse_line(line):
+def parse_line(line, date_formats=DATE_FORMATS):
     """Try to parse a message header line. Returns (fmt, msg_dict) or (None, None)."""
     m = IOS_RE.match(line)
     if m:
-        ts = parse_timestamp(m.group("date"), m.group("time"))
+        ts = parse_timestamp(m.group("date"), m.group("time"), date_formats)
         if ts:
             return "ios", {
                 "timestamp": ts,
@@ -103,7 +131,7 @@ def parse_line(line):
             }
     m = ANDROID_RE.match(line)
     if m:
-        ts = parse_timestamp(m.group("date"), m.group("time"))
+        ts = parse_timestamp(m.group("date"), m.group("time"), date_formats)
         if ts:
             rest = m.group("rest")
             author, sep, text = rest.partition(": ")
@@ -122,10 +150,11 @@ def parse_chat(chat_path):
     """Parse a _chat.txt file into (format, messages)."""
     raw_messages = []
     detected = {}
+    date_formats = detect_date_formats(chat_path)
     with open(chat_path, encoding="utf-8") as f:
         for line in f:
             line = line.rstrip("\n")
-            fmt, msg = parse_line(line)
+            fmt, msg = parse_line(line, date_formats)
             if msg:
                 detected[fmt] = detected.get(fmt, 0) + 1
                 raw_messages.append(msg)

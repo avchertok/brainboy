@@ -2,9 +2,20 @@
 """Отбор изображений-кандидатов с результатами игры.
 
 Читает data/raw/messages.json, находит сообщения с вложениями-картинками,
-фильтрует по ключевым словам в тексте сообщения и соседних сообщений
-(или берёт все картинки при --all), копирует кандидатов в data/media/
-с префиксом даты и пишет data/raw/candidates.json.
+отбирает кандидатов и копирует их в data/media/ с префиксом даты
+(YYYY-MM-DD_имя), пишет data/raw/candidates.json.
+
+Отбор по умолчанию: ключевые слова в тексте сообщения/соседей (любой день)
+ПЛЮС все картинки воскресений и понедельников (игры проходят по воскресеньям,
+итоги скидывают в вс/пн, часто без подписи). --all берёт все картинки.
+
+Дедупликация по содержимому (SHA-256): один и тот же файл, отправленный
+несколько раз, копируется один раз (первое вхождение по времени), а все
+повторные отправки фиксируются в candidates.json в списке "duplicates" —
+повтор это сигнал важности и источник для валидации.
+
+Кандидаты с высокой уверенностью (ключевые слова или воскресный вечер)
+помечаются флагом "high_confidence".
 
 Если экспорт был сделан БЕЗ медиафайлов (в чате есть записи о вложениях,
 но самих файлов нет), скрипт не падает, а печатает агрегированный отчёт:
@@ -18,6 +29,7 @@
 """
 
 import argparse
+import hashlib
 import json
 import shutil
 import sys
@@ -49,6 +61,15 @@ DEFAULT_KEYWORDS = [
 def is_image(filename):
     # None = "<Media omitted>": вложение без файла в экспорте
     return filename is not None and Path(filename).suffix.lower() in IMAGE_EXTENSIONS
+
+
+def sha256_of(path):
+    """Return the SHA-256 hex digest of a file's contents."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def nearest_past_sunday(d):
@@ -165,7 +186,12 @@ def main():
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Брать все изображения без фильтра по ключевым словам",
+        help="Брать все изображения без фильтра по ключевым словам и дням недели",
+    )
+    parser.add_argument(
+        "--keywords-only",
+        action="store_true",
+        help="Отключить добавление всех картинок воскресений/понедельников",
     )
     parser.add_argument(
         "--keywords",
@@ -195,44 +221,89 @@ def main():
 
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     candidates = []
+    seen = {}  # sha256 -> candidate record (для дедупликации по содержимому)
     skipped_missing = 0
+    duplicates_skipped = 0
 
     for i, msg in enumerate(messages):
         images = [a for a in msg.get("attachments", []) if is_image(a)]
         if not images:
             continue
 
-        if args.all:
-            context = msg.get("text") or ""
-        else:
-            context = context_matches(messages, i, keywords, args.window)
-            if context is None:
+        context = context_matches(messages, i, keywords, args.window)
+        ts = msg.get("timestamp")
+        dt = None
+        if ts:
+            try:
+                dt = datetime.fromisoformat(ts)
+            except ValueError:
+                pass
+        # Воскресенье (weekday 6) и понедельник (0): итоги игр скидывают
+        # в эти дни, часто без подписи — ключевые слова их не ловят
+        is_sun_mon = dt is not None and dt.weekday() in (6, 0)
+
+        reasons = []
+        if context is not None:
+            reasons.append("keywords")
+        if is_sun_mon:
+            reasons.append("sunday" if dt.weekday() == 6 else "monday")
+
+        if not args.all:
+            if args.keywords_only and context is None:
+                continue
+            if not reasons:
                 continue
 
-        date_prefix = (msg.get("timestamp") or "")[:10] or "unknown-date"
+        # Высокая уверенность: ключевые слова или воскресный вечер
+        high_confidence = context is not None or (
+            dt is not None and dt.weekday() == 6 and dt.hour >= 17
+        )
+
+        date_prefix = (ts or "")[:10] or "unknown-date"
         for filename in images:
             src = export_dir / filename
             if not src.exists():
                 skipped_missing += 1
                 continue
+
+            digest = sha256_of(src)
+            if digest in seen:
+                # Повторная отправка того же файла: не копируем, но фиксируем
+                record = seen[digest]
+                record["duplicates"].append(
+                    {"timestamp": ts, "original_name": Path(filename).name}
+                )
+                record["high_confidence"] = record["high_confidence"] or high_confidence
+                for r in reasons:
+                    if r not in record["match_reasons"]:
+                        record["match_reasons"].append(r)
+                duplicates_skipped += 1
+                continue
+
             dest_name = f"{date_prefix}_{Path(filename).name}"
             dest = MEDIA_DIR / dest_name
             shutil.copy2(src, dest)
-            candidates.append(
-                {
-                    "file": dest_name,
-                    "timestamp": msg.get("timestamp"),
-                    "author": msg.get("author"),
-                    "context_text": context,
-                }
-            )
-            print(f"  Кандидат: {dest_name}")
+            record = {
+                "file": dest_name,
+                "sha256": digest,
+                "timestamp": ts,
+                "author": msg.get("author"),
+                "context_text": context,
+                "high_confidence": high_confidence,
+                "match_reasons": reasons if not args.all else (reasons or ["all"]),
+                "duplicates": [],
+            }
+            seen[digest] = record
+            candidates.append(record)
 
     out_path = RAW_DIR / "candidates.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(candidates, f, ensure_ascii=False, indent=2)
 
-    print(f"Отобрано кандидатов: {len(candidates)}")
+    high_conf_count = sum(1 for c in candidates if c["high_confidence"])
+    print(f"Отобрано кандидатов (уникальных файлов): {len(candidates)}")
+    print(f"  из них с высокой уверенностью: {high_conf_count}")
+    print(f"Повторных отправок отсеяно дедупликацией: {duplicates_skipped}")
     if skipped_missing:
         print(f"Пропущено из-за отсутствия файла в экспорте: {skipped_missing}")
     print(f"Список: {out_path}, файлы: {MEDIA_DIR}")
