@@ -184,6 +184,9 @@
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--border);
   }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--text); background: var(--accent-soft); }
+  .sort-arrow { font-size: 0.72em; margin-left: 3px; }
   tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .team-name { font-weight: 600; }
@@ -418,17 +421,23 @@ const fmtDate = (iso) => {
     : d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 };
 
+/* металлические цвета линий топ-3 текущего скоупа/системы */
+const METALS = {
+  light: ["#d4a017", "#9aa4af", "#b0713b"], // золото, серебро, бронза
+  dark:  ["#e8b923", "#b6c0cb", "#cf8c50"],
+};
+
+/* палитра остальных команд — намеренно без золотистых, серебристых
+   и бронзовых оттенков, чтобы не путались с топ-3 */
 const PALETTE = [
-  "#4f6ef7", "#f2555a", "#22a06b", "#f5b301", "#9b59d0",
-  "#17a2b8", "#e67e22", "#e84393", "#556270", "#2ecc71",
-  "#8d6e63", "#00897b",
+  "#4f6ef7", "#e14d55", "#1e9e63", "#8e44c9", "#0f9bb0", "#e0448c",
+  "#274690", "#a52834", "#5aa62c", "#7048e8", "#0b7a6e", "#3b9ddd",
 ];
 
-/* те же акценты, но осветлённые для читаемости на тёмном фоне */
+/* те же оттенки, осветлённые для читаемости на тёмном фоне */
 const PALETTE_DARK = [
-  "#7f95ff", "#ff7a7f", "#3fc98b", "#ffcb45", "#bd85ea",
-  "#3fc4dc", "#ff9c4a", "#ff7dbb", "#93a5ba", "#5ee394",
-  "#bd9a8e", "#2cbfab",
+  "#7f95ff", "#ff7a80", "#3fc98b", "#b678ea", "#3fc4dc", "#ff7dbb",
+  "#6f86d8", "#e26974", "#8ed15e", "#9a7dff", "#2cbfab", "#6cc0ff",
 ];
 
 const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
@@ -438,6 +447,14 @@ const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const state = {
   season: "all",       // "all" | "2025" | "2026" | ...
   system: "points",    // "points" | "olympic"
+  sortKey: "rating",   // столбец сортировки таблицы рейтинга
+  sortDir: "desc",     // "asc" | "desc"
+};
+
+/* направление первого клика по столбцу; для «лучшего места» меньше = лучше */
+const SORT_DEFAULT_DIR = {
+  rank: "asc", name: "asc", rating: "desc", games_played: "desc",
+  wins: "desc", podiums: "desc", avg_points: "desc", best_place: "asc",
 };
 
 let DATA = null;
@@ -520,35 +537,64 @@ function systemButtons() {
 function renderStandingsTable() {
   const scope = DATA.scopes[state.season] || DATA.scopes.all;
   const key = state.system;
-  const rows = [...scope.standings]
-    .sort((a, b) => (b[key] - a[key]) || (b.points - a.points) || a.name.localeCompare(b.name, lang))
-    .map((t, i) => {
-      const rank = i + 1;
-      const ratingValue = key === "points" ? t.points : t.olympic;
-      return `
-      <tr>
-        <td class="num">${MEDALS[rank] ? `<span class="medal">${MEDALS[rank]}</span>` : rank}</td>
-        <td class="team-name">${esc(t.name)}</td>
-        <td class="num rating-col">${ratingValue}</td>
-        <td class="num">${t.games_played}</td>
-        <td class="num">${t.wins}</td>
-        <td class="num">${t.podiums}</td>
-        <td class="num">${t.avg_points}</td>
-        <td class="num">${t.best_place ?? "—"}</td>
-      </tr>`;
-    }).join("");
 
-  const ratingHeader = key === "points" ? t("colPoints") : t("colOlympic");
+  /* базовый порядок — по рейтингу активной системы; rank запоминается,
+     чтобы колонка «#» всегда показывала исходное место в рейтинге */
+  const teams = [...scope.standings]
+    .sort((a, b) => (b[key] - a[key]) || (b.points - a.points) || a.name.localeCompare(b.name, lang))
+    .map((team, i) => ({ ...team, rank: i + 1 }));
+
+  const sk = state.sortKey;
+  const dir = state.sortDir === "asc" ? 1 : -1;
+  const val = (team) =>
+    sk === "rating" ? team[key] : sk === "rank" ? team.rank : team[sk];
+  teams.sort((a, b) => {
+    if (sk === "name") return dir * a.name.localeCompare(b.name, lang);
+    const av = val(a), bv = val(b);
+    if (av == null && bv == null) return a.rank - b.rank;
+    if (av == null) return 1; // пустые значения всегда внизу
+    if (bv == null) return -1;
+    return dir * (av - bv) || (a.rank - b.rank);
+  });
+
+  const rows = teams.map((team) => {
+    const ratingValue = key === "points" ? team.points : team.olympic;
+    return `
+      <tr>
+        <td class="num">${MEDALS[team.rank] ? `<span class="medal">${MEDALS[team.rank]}</span>` : team.rank}</td>
+        <td class="team-name">${esc(team.name)}</td>
+        <td class="num rating-col">${ratingValue}</td>
+        <td class="num">${team.games_played}</td>
+        <td class="num">${team.wins}</td>
+        <td class="num">${team.podiums}</td>
+        <td class="num">${team.avg_points}</td>
+        <td class="num">${team.best_place ?? "—"}</td>
+      </tr>`;
+  }).join("");
+
+  const cols = [
+    ["rank", "#"],
+    ["name", t("colTeam")],
+    ["rating", key === "points" ? t("colPoints") : t("colOlympic")],
+    ["games_played", t("colGames")],
+    ["wins", t("colWins")],
+    ["podiums", t("colPodiums")],
+    ["avg_points", t("colAvg")],
+    ["best_place", t("colBest")],
+  ];
+  const ths = cols.map(([colKey, label]) => {
+    const arrow = sk === colKey
+      ? `<span class="sort-arrow">${state.sortDir === "asc" ? "▲" : "▼"}</span>` : "";
+    const numCls = colKey === "name" ? "" : " num";
+    return `<th class="sortable${numCls}" data-sort="${colKey}"` +
+      ` aria-sort="${sk === colKey ? (state.sortDir === "asc" ? "ascending" : "descending") : "none"}">` +
+      `${label}${arrow}</th>`;
+  }).join("");
+
   return `
     <div class="table-wrap">
       <table>
-        <thead><tr>
-          <th class="num">#</th><th>${t("colTeam")}</th>
-          <th class="num">${ratingHeader}</th>
-          <th class="num">${t("colGames")}</th><th class="num">${t("colWins")}</th>
-          <th class="num">${t("colPodiums")}</th><th class="num">${t("colAvg")}</th>
-          <th class="num">${t("colBest")}</th>
-        </tr></thead>
+        <thead><tr>${ths}</tr></thead>
         <tbody>${rows || ""}</tbody>
       </table>
     </div>`;
@@ -629,22 +675,30 @@ function updateRatingChart() {
   const scope = DATA.scopes[state.season] || DATA.scopes.all;
   const history = scope.history;
   const key = state.system;
-  const palette = currentTheme() === "dark" ? PALETTE_DARK : PALETTE;
+  const theme = currentTheme();
+  const palette = theme === "dark" ? PALETTE_DARK : PALETTE;
+  const metals = METALS[theme];
   const ui = chartUiColors();
 
-  // топ-N команд по итоговому значению рейтинга — только им рисуем подписи
+  // ранжирование команд по итоговому значению рейтинга: топ-3 получают
+  // золото/серебро/бронзу, остальные — цвета палитры по порядку мест;
+  // тем же топ-N рисуем подписи у линий
   const finals = history.series.map((team, i) => {
     const idx = lastNonNullIndex(team[key]);
     return { i, value: idx >= 0 ? team[key][idx] : -Infinity };
   });
   finals.sort((a, b) => b.value - a.value);
   const labeledIdx = new Set(finals.slice(0, LABELED_TEAMS).map((f) => f.i));
+  const colorOf = new Map();
+  finals.forEach((f, place) => {
+    colorOf.set(f.i, place < 3 ? metals[place] : palette[(place - 3) % palette.length]);
+  });
 
   const datasets = history.series.map((team, i) => ({
     label: team.name,
     data: team[key],
-    borderColor: palette[i % palette.length],
-    backgroundColor: palette[i % palette.length],
+    borderColor: colorOf.get(i),
+    backgroundColor: colorOf.get(i),
     spanGaps: true,
     tension: 0.25,
     pointRadius: 2,
@@ -820,6 +874,21 @@ function attachHandlers() {
     if (!btn) return;
     state.system = btn.dataset.system;
     refreshRating();
+  });
+  /* делегированный обработчик сортировки; висит на контейнере #standings,
+     который переживает перерисовки таблицы через innerHTML */
+  const standings = document.getElementById("standings");
+  if (standings) standings.addEventListener("click", (e) => {
+    const th = e.target.closest("th[data-sort]");
+    if (!th) return;
+    const colKey = th.dataset.sort;
+    if (state.sortKey === colKey) {
+      state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+    } else {
+      state.sortKey = colKey;
+      state.sortDir = SORT_DEFAULT_DIR[colKey] || "desc";
+    }
+    standings.innerHTML = renderStandingsTable();
   });
 }
 
