@@ -21,6 +21,7 @@ data/results.json; уже существующие в results.json даты ни
 
 import argparse
 import json
+import re
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -191,9 +192,30 @@ def report_group_conflicts(group, aliases):
     return has_conflicts
 
 
+def message_timestamp(draft):
+    """Parse the message send timestamp from the source file name.
+
+    Имена вида ..._00001592-PHOTO-2025-03-16-20-27-55.jpg содержат время
+    отправки фото в чат. Если распарсить не удалось — datetime.min.
+    """
+    name = draft.get("source_file") or draft.get("_file") or ""
+    m = re.search(r"PHOTO-(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})", name)
+    if m:
+        return datetime(*map(int, m.groups()))
+    return datetime.min
+
+
 def best_draft(group):
-    """Pick the most complete draft of a duplicate group."""
-    return max(group, key=completeness)
+    """Pick the winning draft of a duplicate group.
+
+    Сначала полнота (число команд, заполненные ячейки раундов): промежуточные
+    таблицы после 3/6 раундов отсеиваются. Среди одинаково полных (финальных)
+    дублей при расхождении очков побеждает более поздний по времени отправки:
+    исправленную таблицу пересылают в чат позже.
+    """
+    max_score = max(completeness(d) for d in group)
+    finalists = [d for d in group if completeness(d) == max_score]
+    return max(finalists, key=message_timestamp)
 
 
 def build_game(draft, aliases):
@@ -300,7 +322,11 @@ def main():
             chosen = best_draft(group)
             game = build_game(chosen, aliases)
             n_teams = len(game["teams"])
-            print(f"  Выбран черновик: {chosen['_file']} (команд: {n_teams})")
+            ts = message_timestamp(chosen)
+            ts_str = ts.isoformat(" ") if ts != datetime.min else "время неизвестно"
+            print(f"  Выбран черновик: {chosen['_file']} "
+                  f"(команд: {n_teams}, отправлен: {ts_str} — "
+                  f"самый полный, при равной полноте самый поздний)")
             if date_key not in existing_dates and date_key != "unknown":
                 proposed_games.append(game)
             elif date_key == "unknown":
