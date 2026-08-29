@@ -91,6 +91,7 @@
   .card .label { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
 
   .controls {
+    position: relative; /* якорь для .seg-tip */
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -119,6 +120,52 @@
     background: var(--accent);
     color: #fff;
     font-weight: 600;
+  }
+
+  /* видимый намёк на подсказку у кнопки олимпийской системы */
+  .hint-q {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 6px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0.75;
+    vertical-align: 1px;
+  }
+  /* кастомный тултип; позиционируется от .controls, поэтому
+     overflow:hidden у .seg его не обрезает */
+  .seg-tip {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 10;
+    max-width: 360px;
+    padding: 8px 12px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    font-size: 0.82rem;
+    font-weight: 400;
+    white-space: normal;
+    text-align: left;
+    pointer-events: none; /* не перехватывает тапы — переключение работает */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+  }
+  #system-seg button[data-system="olympic"]:hover .seg-tip,
+  #system-seg button[data-system="olympic"]:focus-visible .seg-tip,
+  #system-seg button[data-system="olympic"]:active .seg-tip {
+    opacity: 1;
+    visibility: visible;
   }
 
   .table-wrap {
@@ -288,6 +335,7 @@ const I18N = {
     season: "Сезон",
     byPoints: "По сумме очков",
     olympic: "Олимпийская система",
+    olympicHint: "1 место — 3 балла, 2 место — 2, 3 место — 1 (за каждую игру)",
     colTeam: "Команда",
     colPoints: "Очки",
     colOlympic: "Олимп. очки",
@@ -324,6 +372,7 @@ const I18N = {
     season: "Season",
     byPoints: "Total points",
     olympic: "Olympic system",
+    olympicHint: "1st place — 3 pts, 2nd — 2, 3rd — 1 (per game)",
     colTeam: "Team",
     colPoints: "Points",
     colOlympic: "Olympic pts",
@@ -459,9 +508,12 @@ function seasonButtons() {
 }
 
 function systemButtons() {
-  const opts = [["points", t("byPoints")], ["olympic", t("olympic")]];
-  return `<div class="seg" id="system-seg">` + opts.map(([val, label]) =>
-    `<button data-system="${val}" class="${state.system === val ? "active" : ""}">${label}</button>`
+  const olympicExtra =
+    `<span class="hint-q" aria-hidden="true">?</span>` +
+    `<span class="seg-tip" role="tooltip">${esc(t("olympicHint"))}</span>`;
+  const opts = [["points", t("byPoints"), ""], ["olympic", t("olympic"), olympicExtra]];
+  return `<div class="seg" id="system-seg">` + opts.map(([val, label, extra]) =>
+    `<button data-system="${val}" class="${state.system === val ? "active" : ""}">${label}${extra}</button>`
   ).join("") + `</div>`;
 }
 
