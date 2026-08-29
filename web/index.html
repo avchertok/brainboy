@@ -109,6 +109,7 @@
     border: 0;
     background: transparent;
     padding: 8px 14px;
+    min-height: 40px; /* тач-таргет */
     font: inherit;
     font-size: 0.9rem;
     color: var(--muted);
@@ -145,7 +146,7 @@
     top: calc(100% + 6px);
     left: 0;
     z-index: 10;
-    max-width: 360px;
+    max-width: min(360px, calc(100vw - 48px));
     padding: 8px 12px;
     background: var(--card);
     color: var(--text);
@@ -161,7 +162,14 @@
     visibility: hidden;
     transition: opacity 0.15s ease;
   }
-  #system-seg button[data-system="olympic"]:hover .seg-tip,
+  /* hover-показ только на устройствах с настоящим ховером: на таче iOS
+     "залипающий" :hover оставлял бы тултип висеть после переключения */
+  @media (hover: hover) {
+    #system-seg button[data-system="olympic"]:hover .seg-tip {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
   #system-seg button[data-system="olympic"]:focus-visible .seg-tip,
   #system-seg button[data-system="olympic"]:active .seg-tip {
     opacity: 1;
@@ -201,6 +209,8 @@
   .rating-col { color: var(--accent); font-weight: 700; }
 
   .chart-wrap {
+    position: relative; /* контейнер размеров для Chart.js */
+    height: 460px;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -270,10 +280,30 @@
     .container { padding-top: 20px; }
     h1 { font-size: 1.45rem; }
     h2 { font-size: 1.15rem; margin-top: 32px; }
-    .card { padding: 12px 14px; }
-    .card .value { font-size: 1.3rem; }
+    .header-top { flex-wrap: wrap; }
+    .cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card { padding: 12px 14px; min-width: 0; }
+    .card .value { font-size: 1.3rem; overflow-wrap: break-word; }
     th, td { padding: 8px 9px; font-size: 0.88rem; }
+    /* сегмент шире экрана (например, три сезона) скроллится сам,
+       не растягивая страницу; min-height кнопок сохраняет тач-таргет */
+    .seg { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .seg button { padding: 7px 10px; font-size: 0.82rem; }
+    /* при горизонтальном скролле таблиц колонка с названием команды
+       закреплена; фон обязателен, иначе под ней просвечивают цифры */
+    .table-wrap th:nth-child(2),
+    .table-wrap td:nth-child(2) {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: var(--card);
+      max-width: 45vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: inset -1px 0 0 var(--border);
+    }
+    .table-wrap tr.place-1 td:nth-child(2) { background: var(--place1-bg); }
+    .chart-wrap { height: 340px; padding: 12px; }
     .game { padding: 12px 14px; }
   }
 </style>
@@ -635,6 +665,25 @@ const LABELED_TEAMS = 10;
 const LINE_LABEL_FONT = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 const LINE_LABEL_GAP = 12;
 
+/* адаптив подписей: на узких экранах меньше подписываемых команд и
+   короче правый отступ, на очень узких подписи выключены (остаются
+   тултипы); брейкпоинт 640px совпадает с мобильным медиазапросом CSS */
+function chartLabelConfig() {
+  const w = window.innerWidth || 1024;
+  if (w <= 420) return { count: 0, maxLabelWidth: 0, maxPadRight: 12 };
+  if (w <= 640) return { count: 5, maxLabelWidth: 76, maxPadRight: 96 };
+  return { count: LABELED_TEAMS, maxLabelWidth: 164, maxPadRight: 180 };
+}
+
+function truncateToWidth(ctx, text, maxWidth) {
+  if (!maxWidth || ctx.measureText(text).width <= maxWidth) return text;
+  let s = text;
+  while (s.length > 1 && ctx.measureText(s + "…").width > maxWidth) {
+    s = s.slice(0, -1);
+  }
+  return s + "…";
+}
+
 function lastNonNullIndex(arr) {
   for (let i = arr.length - 1; i >= 0; i--) {
     if (arr[i] != null) return i;
@@ -644,9 +693,10 @@ function lastNonNullIndex(arr) {
 
 const lineLabelsPlugin = {
   id: "lineLabels",
-  afterDatasetsDraw(chart) {
+  afterDatasetsDraw(chart, args, opts) {
     const { ctx, chartArea } = chart;
     if (!chartArea) return;
+    const maxWidth = (opts && opts.maxWidth) || 0;
 
     const labels = [];
     chart.data.datasets.forEach((ds, i) => {
@@ -681,7 +731,7 @@ const lineLabelsPlugin = {
     ctx.textBaseline = "middle";
     for (const l of labels) {
       ctx.fillStyle = l.color;
-      ctx.fillText(l.text, l.x + 8, l.ty);
+      ctx.fillText(truncateToWidth(ctx, l.text, maxWidth), l.x + 8, l.ty);
     }
     ctx.restore();
   },
@@ -699,12 +749,13 @@ function updateRatingChart() {
   // ранжирование команд по итоговому значению рейтинга: топ-3 получают
   // яркие акцентные цвета и линии потолще, остальные — приглушённую
   // палитру и тонкие линии; тем же топ-N рисуем подписи у линий
+  const labelCfg = chartLabelConfig();
   const finals = history.series.map((team, i) => {
     const idx = lastNonNullIndex(team[key]);
     return { i, value: idx >= 0 ? team[key][idx] : -Infinity };
   });
   finals.sort((a, b) => b.value - a.value);
-  const labeledIdx = new Set(finals.slice(0, LABELED_TEAMS).map((f) => f.i));
+  const labeledIdx = new Set(finals.slice(0, labelCfg.count).map((f) => f.i));
   const placeOf = new Map();
   finals.forEach((f, place) => placeOf.set(f.i, place));
 
@@ -726,16 +777,18 @@ function updateRatingChart() {
     };
   });
 
-  // правый отступ — под самую длинную из отображаемых подписей
+  // правый отступ — под самую длинную из отображаемых подписей,
+  // но не длиннее потолка ширины подписи для текущего экрана
   const canvas = document.getElementById("ratingChart");
   const mctx = canvas.getContext && canvas.getContext("2d");
-  let padRight = 24;
-  if (mctx) {
+  let padRight = labelCfg.count > 0 ? 24 : 12;
+  if (mctx && labelCfg.count > 0) {
     mctx.save();
     mctx.font = LINE_LABEL_FONT;
     for (const ds of datasets) {
       if (ds.showLineLabel) {
-        padRight = Math.max(padRight, mctx.measureText(ds.label).width + 16);
+        const w = Math.min(mctx.measureText(ds.label).width, labelCfg.maxLabelWidth);
+        padRight = Math.max(padRight, w + 16);
       }
     }
     mctx.restore();
@@ -746,10 +799,14 @@ function updateRatingChart() {
     data: { labels: history.dates.map(fmtDate), datasets },
     options: {
       responsive: true,
-      layout: { padding: { right: Math.min(Math.ceil(padRight), 180) } },
+      /* высоту задаёт .chart-wrap: без этого на мобильном канвас
+         сплющивается до соотношения 2:1 от узкой ширины */
+      maintainAspectRatio: false,
+      layout: { padding: { right: Math.min(Math.ceil(padRight), labelCfg.maxPadRight) } },
       interaction: { mode: "nearest", intersect: false },
       plugins: {
         legend: { display: false },
+        lineLabels: { maxWidth: labelCfg.maxLabelWidth },
         tooltip: {
           callbacks: {
             label: (item) => `${item.dataset.label}: ${item.formattedValue}`,
@@ -933,6 +990,16 @@ function renderApp() {
         .toLocaleString(lang === "en" ? "en-US" : "ru-RU")
     : "";
 }
+
+/* при смене ширины (поворот телефона) пересобираем график, чтобы
+   применились адаптивные подписи и отступы */
+let chartResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(chartResizeTimer);
+  chartResizeTimer = setTimeout(() => {
+    if (ratingChart) updateRatingChart();
+  }, 200);
+});
 
 async function init() {
   attachThemeToggle();
