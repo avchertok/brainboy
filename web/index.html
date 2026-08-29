@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainBoy — рейтинг квиз-команд</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --muted: #6b7385;
+    --accent: #4f6ef7;
+    --border: #e5e8f0;
+    --gold: #f5b301;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); margin-top: 4px; }
+  h2 { font-size: 1.25rem; margin: 36px 0 14px; letter-spacing: -0.01em; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .card .value { font-size: 1.7rem; font-weight: 700; }
+  .card .label { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th, td { padding: 11px 14px; text-align: left; white-space: nowrap; }
+  th {
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  td.num, th.num { text-align: right; }
+  .team-name { font-weight: 600; }
+  .medal { margin-right: 4px; }
+
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  .game {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .game-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+  .game-title { font-weight: 600; }
+  .game-meta { color: var(--muted); font-size: 0.88rem; }
+  .game ol { margin: 10px 0 0 22px; }
+  .game li { padding: 2px 0; }
+  .game .score { color: var(--muted); }
+
+  .empty {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty .emoji { font-size: 2.4rem; display: block; margin-bottom: 12px; }
+  .empty code {
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.82rem; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.5rem; }
+    .card { padding: 14px 16px; }
+    .card .value { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>BrainBoy — рейтинг квиз-команд</h1>
+    <p class="subtitle">Результаты интеллектуальных игр нашей команды</p>
+  </header>
+
+  <div id="app"></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const fmtDate = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  return isNaN(d) ? iso : d.toLocaleDateString("ru-RU", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+};
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[c]));
+
+const PALETTE = [
+  "#4f6ef7", "#f2555a", "#22a06b", "#f5b301", "#9b59d0",
+  "#17a2b8", "#e67e22", "#e84393", "#556270", "#2ecc71",
+];
+
+function renderEmpty(app) {
+  app.innerHTML = `
+    <div class="empty">
+      <span class="emoji">🧠</span>
+      <p><strong>Данных пока нет</strong></p>
+      <p>Добавьте игры в <code>data/results.json</code> и запустите <code>build_data.py</code>.</p>
+    </div>`;
+}
+
+function renderSummary(data) {
+  const games = data.games.length;
+  const teams = data.standings.length;
+  const last = data.games[data.games.length - 1];
+  return `
+    <div class="cards">
+      <div class="card"><div class="value">${games}</div><div class="label">Всего игр</div></div>
+      <div class="card"><div class="value">${teams}</div><div class="label">Команд</div></div>
+      <div class="card"><div class="value">${fmtDate(last.date)}</div><div class="label">Последняя игра</div></div>
+    </div>`;
+}
+
+function renderStandings(standings) {
+  const medals = ["🥇", "🥈", "🥉"];
+  const rows = standings.map((t, i) => `
+    <tr>
+      <td class="num">${medals[i] ? `<span class="medal">${medals[i]}</span>` : i + 1}</td>
+      <td class="team-name">${esc(t.name)}</td>
+      <td class="num">${t.games_played}</td>
+      <td class="num">${t.wins}</td>
+      <td class="num">${t.total_score}</td>
+      <td class="num">${t.avg_score}</td>
+      <td class="num">${t.best_place ?? "—"}</td>
+    </tr>`).join("");
+  return `
+    <h2>Турнирная таблица</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="num">#</th><th>Команда</th><th class="num">Игры</th>
+          <th class="num">Победы</th><th class="num">Очки</th>
+          <th class="num">Среднее</th><th class="num">Лучшее место</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderChart(data) {
+  const dates = data.games.map((g) => g.date);
+  const datasets = data.standings.map((team, i) => {
+    const byDate = Object.fromEntries(team.history.map((h) => [h.date, h.score]));
+    return {
+      label: team.name,
+      data: dates.map((d) => byDate[d] ?? null),
+      borderColor: PALETTE[i % PALETTE.length],
+      backgroundColor: PALETTE[i % PALETTE.length],
+      spanGaps: true,
+      tension: 0.25,
+    };
+  });
+  new Chart(document.getElementById("scoreChart"), {
+    type: "line",
+    data: { labels: dates.map(fmtDate), datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "bottom" } },
+      scales: { y: { title: { display: true, text: "Очки" } } },
+    },
+  });
+}
+
+function renderGames(games) {
+  const items = [...games].reverse().slice(0, 10).map((g) => {
+    const teams = [...g.teams]
+      .sort((a, b) => (a.place ?? 99) - (b.place ?? 99))
+      .map((t) => `<li>${esc(t.name)} <span class="score">— ${t.score} очк., ${t.place ?? "—"} место</span></li>`)
+      .join("");
+    return `
+      <div class="game">
+        <div class="game-head">
+          <span class="game-title">${esc(g.title || "Игра")}</span>
+          <span class="game-meta">${fmtDate(g.date)}${g.venue ? " · " + esc(g.venue) : ""}</span>
+        </div>
+        <ol>${teams}</ol>
+      </div>`;
+  }).join("");
+  return `<h2>Последние игры</h2>${items}`;
+}
+
+async function init() {
+  const app = document.getElementById("app");
+  let data;
+  try {
+    const resp = await fetch("./data.json");
+    data = await resp.json();
+  } catch (e) {
+    renderEmpty(app);
+    return;
+  }
+
+  if (!data.games || data.games.length === 0) {
+    renderEmpty(app);
+  } else {
+    app.innerHTML =
+      renderSummary(data) +
+      renderStandings(data.standings) +
+      `<h2>Динамика очков</h2><div class="chart-wrap"><canvas id="scoreChart"></canvas></div>` +
+      renderGames(data.games);
+    renderChart(data);
+  }
+
+  if (data.generated_at) {
+    document.getElementById("footer").textContent =
+      "Обновлено: " + new Date(data.generated_at).toLocaleString("ru-RU");
+  }
+}
+
+init();
+</script>
+</body>
+</html>
