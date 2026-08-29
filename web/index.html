@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BrainBoy — рейтинг команд</title>
+<title>BrainBoy Abu Dhabi</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
   :root {
@@ -46,7 +46,16 @@
     justify-content: space-between;
     gap: 12px;
   }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
   #theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
     width: 40px;
     height: 40px;
@@ -57,6 +66,11 @@
     line-height: 1;
     cursor: pointer;
   }
+  #theme-toggle:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  #lang-seg button { padding: 10px 12px; font-weight: 600; }
   h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
   .subtitle { color: var(--muted); margin-top: 4px; }
   h2 { font-size: 1.3rem; margin: 40px 0 14px; letter-spacing: -0.01em; }
@@ -157,10 +171,9 @@
     padding-left: 8px; padding-right: 8px; text-align: right;
     font-variant-numeric: tabular-nums;
   }
-  .game td.round.captain, .game th.round.captain { background: var(--accent-soft); }
   .place-1 td { background: var(--place1-bg); }
 
-  .captain-note {
+  .games-note {
     color: var(--muted); font-size: 0.8rem; margin-top: 8px;
   }
 
@@ -224,11 +237,17 @@
   <header>
     <div class="header-top">
       <div>
-        <h1>BrainBoy — рейтинг команд</h1>
-        <p class="subtitle">Результаты игр по воскресеньям: 8 раундов, последний — капитанский конкурс</p>
+        <h1 data-i18n="title">BrainBoy Abu Dhabi</h1>
+        <p class="subtitle" data-i18n="subtitle">Рейтинг квиз-команд · игры по воскресеньям, 8 раундов</p>
       </div>
-      <button id="theme-toggle" type="button" title="Переключить тему"
-        aria-label="Переключить светлую/тёмную тему">🌙</button>
+      <div class="header-controls">
+        <div class="seg" id="lang-seg">
+          <button type="button" data-lang="ru">RU</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <button id="theme-toggle" type="button" title="Переключить тему"
+          aria-label="Переключить светлую/тёмную тему">🌙</button>
+      </div>
     </div>
   </header>
 
@@ -242,14 +261,6 @@
 
 /* ---------- утилиты ---------- */
 
-const fmtDate = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso + "T00:00:00");
-  return isNaN(d) ? iso : d.toLocaleDateString("ru-RU", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-};
-
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[c]));
@@ -259,6 +270,103 @@ const plural = (n, one, few, many) => {
   if (m10 === 1 && m100 !== 11) return one;
   if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
   return many;
+};
+
+/* ---------- i18n ---------- */
+
+const I18N = {
+  ru: {
+    title: "BrainBoy Abu Dhabi",
+    subtitle: "Рейтинг квиз-команд · игры по воскресеньям, 8 раундов",
+    themeTitle: "Переключить тему",
+    themeAria: "Переключить светлую/тёмную тему",
+    gamesPlayed: (n) => plural(n, "игра сыграна", "игры сыграно", "игр сыграно"),
+    teamsCount: (n) => plural(n, "команда", "команды", "команд"),
+    lastGame: "последняя игра",
+    rating: "Рейтинг",
+    allTime: "За всё время",
+    season: "Сезон",
+    byPoints: "По сумме очков",
+    olympic: "Олимпийская система",
+    colTeam: "Команда",
+    colPoints: "Очки",
+    colOlympic: "Олимп. очки",
+    colGames: "Игры",
+    colWins: "Победы",
+    colPodiums: "Подиумы",
+    colAvg: "Ср. очки",
+    colBest: "Лучшее место",
+    chartHeading: "Динамика рейтинга",
+    yPoints: "Сумма очков",
+    yOlympic: "Олимпийские очки",
+    gamesHeading: "Результаты игр",
+    gamesNote: "Свежие игры сверху.",
+    colPlace: "Место",
+    colTotal: "Итог",
+    roundPrefix: "Р",
+    game: "Игра",
+    emptyTitle: "Данных пока нет",
+    emptyText: "Результаты игр появятся здесь после первой обработки фотографий таблиц.",
+    emptyHow: "Как добавить: черновики из <code>vision_extract.py</code> → " +
+      "консолидация <code>merge_drafts.py</code> → сборка <code>build_data.py</code>.",
+    updated: "Обновлено:",
+  },
+  en: {
+    title: "BrainBoy Abu Dhabi",
+    subtitle: "Quiz team ratings · Sunday games, 8 rounds",
+    themeTitle: "Toggle theme",
+    themeAria: "Toggle light/dark theme",
+    gamesPlayed: (n) => (n === 1 ? "game played" : "games played"),
+    teamsCount: (n) => (n === 1 ? "team" : "teams"),
+    lastGame: "last game",
+    rating: "Rating",
+    allTime: "All time",
+    season: "Season",
+    byPoints: "Total points",
+    olympic: "Olympic system",
+    colTeam: "Team",
+    colPoints: "Points",
+    colOlympic: "Olympic pts",
+    colGames: "Games",
+    colWins: "Wins",
+    colPodiums: "Podiums",
+    colAvg: "Avg points",
+    colBest: "Best place",
+    chartHeading: "Rating over time",
+    yPoints: "Total points",
+    yOlympic: "Olympic points",
+    gamesHeading: "Game results",
+    gamesNote: "Most recent games first.",
+    colPlace: "Place",
+    colTotal: "Total",
+    roundPrefix: "R",
+    game: "Game",
+    emptyTitle: "No data yet",
+    emptyText: "Game results will appear here once the first table photos are processed.",
+    emptyHow: "To add data: drafts from <code>vision_extract.py</code> → " +
+      "consolidate with <code>merge_drafts.py</code> → build with <code>build_data.py</code>.",
+    updated: "Updated:",
+  },
+};
+
+let lang = "ru";
+try {
+  const savedLang = localStorage.getItem("lang");
+  if (savedLang === "ru" || savedLang === "en") lang = savedLang;
+} catch (e) {}
+
+const t = (key) => {
+  const d = I18N[lang] || I18N.ru;
+  return d[key] !== undefined ? d[key] : I18N.ru[key];
+};
+
+const fmtDate = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return iso;
+  return lang === "en"
+    ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 };
 
 const PALETTE = [
@@ -317,10 +425,9 @@ function renderEmpty(app) {
   app.innerHTML = `
     <div class="empty">
       <span class="emoji">🧠</span>
-      <strong>Данных пока нет</strong>
-      <p>Результаты игр появятся здесь после первой обработки фотографий таблиц.</p>
-      <p>Как добавить: черновики из <code>vision_extract.py</code> →
-        консолидация <code>merge_drafts.py</code> → сборка <code>build_data.py</code>.</p>
+      <strong>${t("emptyTitle")}</strong>
+      <p>${t("emptyText")}</p>
+      <p>${t("emptyHow")}</p>
     </div>`;
 }
 
@@ -333,26 +440,26 @@ function renderSummary() {
   return `
     <div class="cards">
       <div class="card"><div class="value">${games}</div>
-        <div class="label">${plural(games, "игра", "игры", "игр")} сыграно</div></div>
+        <div class="label">${t("gamesPlayed")(games)}</div></div>
       <div class="card"><div class="value">${teams}</div>
-        <div class="label">${plural(teams, "команда", "команды", "команд")}</div></div>
+        <div class="label">${t("teamsCount")(teams)}</div></div>
       <div class="card"><div class="value">${fmtDate(last.date)}</div>
-        <div class="label">последняя игра</div></div>
+        <div class="label">${t("lastGame")}</div></div>
     </div>`;
 }
 
 /* ---------- рейтинг ---------- */
 
 function seasonButtons() {
-  const opts = [["all", "За всё время"]]
-    .concat(DATA.seasons.map((s) => [s, "Сезон " + s]));
+  const opts = [["all", t("allTime")]]
+    .concat(DATA.seasons.map((s) => [s, t("season") + " " + s]));
   return `<div class="seg" id="season-seg">` + opts.map(([val, label]) =>
     `<button data-season="${val}" class="${state.season === val ? "active" : ""}">${label}</button>`
   ).join("") + `</div>`;
 }
 
 function systemButtons() {
-  const opts = [["points", "По сумме очков"], ["olympic", "Олимпийская система"]];
+  const opts = [["points", t("byPoints")], ["olympic", t("olympic")]];
   return `<div class="seg" id="system-seg">` + opts.map(([val, label]) =>
     `<button data-system="${val}" class="${state.system === val ? "active" : ""}">${label}</button>`
   ).join("") + `</div>`;
@@ -362,7 +469,7 @@ function renderStandingsTable() {
   const scope = DATA.scopes[state.season] || DATA.scopes.all;
   const key = state.system;
   const rows = [...scope.standings]
-    .sort((a, b) => (b[key] - a[key]) || (b.points - a.points) || a.name.localeCompare(b.name, "ru"))
+    .sort((a, b) => (b[key] - a[key]) || (b.points - a.points) || a.name.localeCompare(b.name, lang))
     .map((t, i) => {
       const rank = i + 1;
       const ratingValue = key === "points" ? t.points : t.olympic;
@@ -379,16 +486,16 @@ function renderStandingsTable() {
       </tr>`;
     }).join("");
 
-  const ratingHeader = key === "points" ? "Очки" : "Олимп. очки";
+  const ratingHeader = key === "points" ? t("colPoints") : t("colOlympic");
   return `
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th class="num">#</th><th>Команда</th>
+          <th class="num">#</th><th>${t("colTeam")}</th>
           <th class="num">${ratingHeader}</th>
-          <th class="num">Игры</th><th class="num">Победы</th>
-          <th class="num">Подиумы</th><th class="num">Ср. очки</th>
-          <th class="num">Лучшее место</th>
+          <th class="num">${t("colGames")}</th><th class="num">${t("colWins")}</th>
+          <th class="num">${t("colPodiums")}</th><th class="num">${t("colAvg")}</th>
+          <th class="num">${t("colBest")}</th>
         </tr></thead>
         <tbody>${rows || ""}</tbody>
       </table>
@@ -397,13 +504,13 @@ function renderStandingsTable() {
 
 function renderRatingBlock() {
   return `
-    <h2>Рейтинг</h2>
+    <h2>${t("rating")}</h2>
     <div class="controls">
       ${seasonButtons()}
       ${systemButtons()}
     </div>
     <div id="standings">${renderStandingsTable()}</div>
-    <h3>Динамика рейтинга</h3>
+    <h3>${t("chartHeading")}</h3>
     <div class="chart-wrap"><canvas id="ratingChart"></canvas></div>`;
 }
 
@@ -535,7 +642,7 @@ function updateRatingChart() {
           grid: { color: ui.grid },
           title: {
             display: true,
-            text: key === "points" ? "Сумма очков" : "Олимпийские очки",
+            text: key === "points" ? t("yPoints") : t("yOlympic"),
             color: ui.text,
           },
         },
@@ -562,18 +669,18 @@ function refreshRating() {
 function renderGames() {
   const n = DATA.rounds_count;
   const roundHeaders = Array.from({ length: n }, (_, i) =>
-    `<th class="round${i === n - 1 ? " captain" : ""}">Р${i + 1}</th>`).join("");
+    `<th class="round">${t("roundPrefix")}${i + 1}</th>`).join("");
 
   const items = [...DATA.games].reverse().map((g) => {
-    const rows = g.teams.map((t) => {
-      const cells = t.rounds.map((v, i) =>
-        `<td class="round${i === n - 1 ? " captain" : ""}">${v ?? "—"}</td>`).join("");
+    const rows = g.teams.map((team) => {
+      const cells = team.rounds.map((v) =>
+        `<td class="round">${v ?? "—"}</td>`).join("");
       return `
-        <tr class="${t.place === 1 ? "place-1" : ""}">
-          <td class="num">${MEDALS[t.place] ?? t.place ?? "—"}</td>
-          <td class="team-name">${esc(t.name)}</td>
+        <tr class="${team.place === 1 ? "place-1" : ""}">
+          <td class="num">${MEDALS[team.place] ?? team.place ?? "—"}</td>
+          <td class="team-name">${esc(team.name)}</td>
           ${cells}
-          <td class="num rating-col">${t.total ?? "—"}</td>
+          <td class="num rating-col">${team.total ?? "—"}</td>
         </tr>`;
     }).join("");
 
@@ -582,13 +689,13 @@ function renderGames() {
     return `
       <div class="game">
         <div class="game-head">
-          <span class="game-title">${esc(g.title || "Игра " + fmtDate(g.date))}</span>
+          <span class="game-title">${esc(g.title || t("game") + " " + fmtDate(g.date))}</span>
           <span class="game-meta">${meta}</span>
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th class="num">Место</th><th>Команда</th>${roundHeaders}<th class="num">Итог</th>
+              <th class="num">${t("colPlace")}</th><th>${t("colTeam")}</th>${roundHeaders}<th class="num">${t("colTotal")}</th>
             </tr></thead>
             <tbody>${rows}</tbody>
           </table>
@@ -597,9 +704,34 @@ function renderGames() {
   }).join("");
 
   return `
-    <h2>Результаты игр</h2>
-    <p class="captain-note" style="margin:-6px 0 14px">Свежие игры сверху. Выделенный столбец Р8 — капитанский конкурс.</p>
+    <h2>${t("gamesHeading")}</h2>
+    <p class="games-note" style="margin:-6px 0 14px">${t("gamesNote")}</p>
     ${items}`;
+}
+
+/* ---------- переключение языка ---------- */
+
+/* обновляет статичные тексты шапки, title и атрибут lang */
+function applyChrome() {
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const themeBtn = document.getElementById("theme-toggle");
+  if (themeBtn) {
+    themeBtn.title = t("themeTitle");
+    themeBtn.setAttribute("aria-label", t("themeAria"));
+  }
+  document.querySelectorAll("#lang-seg button").forEach((b) =>
+    b.classList.toggle("active", b.dataset.lang === lang));
+}
+
+function setLang(next) {
+  lang = next === "en" ? "en" : "ru";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  applyChrome();
+  renderApp();
 }
 
 /* ---------- инициализация ---------- */
@@ -610,6 +742,16 @@ function attachThemeToggle() {
   themeBtn.textContent = currentTheme() === "dark" ? "☀️" : "🌙";
   themeBtn.addEventListener("click", () =>
     setTheme(currentTheme() === "dark" ? "light" : "dark"));
+}
+
+function attachLangToggle() {
+  const seg = document.getElementById("lang-seg");
+  if (!seg) return;
+  seg.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-lang]");
+    if (!btn || btn.dataset.lang === lang) return;
+    setLang(btn.dataset.lang);
+  });
 }
 
 function attachHandlers() {
@@ -629,22 +771,13 @@ function attachHandlers() {
   });
 }
 
-async function init() {
-  attachThemeToggle();
+/* полная перерисовка контента (после загрузки данных и при смене языка);
+   innerHTML заменяет старые узлы, поэтому обработчики не дублируются */
+function renderApp() {
   const app = document.getElementById("app");
-  let data;
-  try {
-    const resp = await fetch("./data.json");
-    data = await resp.json();
-  } catch (e) {
-    renderEmpty(app);
-    return;
-  }
-
-  if (!data.games || data.games.length === 0) {
+  if (!DATA || !DATA.games || DATA.games.length === 0) {
     renderEmpty(app);
   } else {
-    DATA = data;
     app.innerHTML =
       renderSummary() +
       renderRatingBlock() +
@@ -652,11 +785,24 @@ async function init() {
     attachHandlers();
     updateRatingChart();
   }
+  const footer = document.getElementById("footer");
+  footer.textContent = DATA && DATA.generated_at
+    ? t("updated") + " " + new Date(DATA.generated_at)
+        .toLocaleString(lang === "en" ? "en-US" : "ru-RU")
+    : "";
+}
 
-  if (data && data.generated_at) {
-    document.getElementById("footer").textContent =
-      "Обновлено: " + new Date(data.generated_at).toLocaleString("ru-RU");
+async function init() {
+  attachThemeToggle();
+  attachLangToggle();
+  applyChrome();
+  try {
+    const resp = await fetch("./data.json");
+    DATA = await resp.json();
+  } catch (e) {
+    DATA = null;
   }
+  renderApp();
 }
 
 init();
