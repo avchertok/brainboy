@@ -185,8 +185,15 @@
     border-bottom: 1px solid var(--border);
   }
   th.sortable { cursor: pointer; user-select: none; }
-  th.sortable:hover { color: var(--text); background: var(--accent-soft); }
-  .sort-arrow { font-size: 0.72em; margin-left: 3px; }
+  th.sortable:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+  }
+  .sort-arrow { font-size: 0.78em; margin-left: 3px; opacity: 0.4; }
+  .sort-arrow.active { opacity: 1; color: var(--accent); }
+  .sort-hint { color: var(--muted); font-size: 0.78rem; margin: -6px 0 8px; }
   tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .team-name { font-weight: 600; }
@@ -347,6 +354,7 @@ const I18N = {
     colPodiums: "Подиумы",
     colAvg: "Ср. очки",
     colBest: "Лучшее место",
+    sortHint: "Кликните по заголовку столбца, чтобы отсортировать таблицу",
     chartHeading: "Динамика рейтинга",
     yPoints: "Сумма очков",
     yOlympic: "Олимпийские очки",
@@ -384,6 +392,7 @@ const I18N = {
     colPodiums: "Podiums",
     colAvg: "Avg points",
     colBest: "Best place",
+    sortHint: "Click a column header to sort the table",
     chartHeading: "Rating over time",
     yPoints: "Total points",
     yOlympic: "Olympic points",
@@ -421,23 +430,26 @@ const fmtDate = (iso) => {
     : d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 };
 
-/* металлические цвета линий топ-3 текущего скоупа/системы */
-const METALS = {
-  light: ["#d4a017", "#9aa4af", "#b0713b"], // золото, серебро, бронза
-  dark:  ["#e8b923", "#b6c0cb", "#cf8c50"],
+/* яркие «премиальные» цвета топ-3 текущего скоупа/системы:
+   янтарный, ярко-синий, терракотовый (в тёмной теме — осветлённые) */
+const TOP3_COLORS = {
+  light: ["#b8820a", "#2f6bff", "#d95f2b"],
+  dark:  ["#f5b31b", "#7fa3ff", "#ff8a5c"],
 };
+const TOP3_LINE_WIDTH = 2.5;
+const OTHER_LINE_WIDTH = 1.5;
 
-/* палитра остальных команд — намеренно без золотистых, серебристых
-   и бронзовых оттенков, чтобы не путались с топ-3 */
+/* приглушённая палитра остальных команд — сниженная насыщенность,
+   чтобы график не рябил и топ-3 визуально доминировал */
 const PALETTE = [
-  "#4f6ef7", "#e14d55", "#1e9e63", "#8e44c9", "#0f9bb0", "#e0448c",
-  "#274690", "#a52834", "#5aa62c", "#7048e8", "#0b7a6e", "#3b9ddd",
+  "#7d8fb8", "#b8858e", "#7fa98c", "#a289bd", "#76a5b1", "#b585a8",
+  "#8ba37b", "#6e8ba3", "#6f9e9c", "#9f7fa3", "#95a86f", "#7b93a8",
 ];
 
 /* те же оттенки, осветлённые для читаемости на тёмном фоне */
 const PALETTE_DARK = [
-  "#7f95ff", "#ff7a80", "#3fc98b", "#b678ea", "#3fc4dc", "#ff7dbb",
-  "#6f86d8", "#e26974", "#8ed15e", "#9a7dff", "#2cbfab", "#6cc0ff",
+  "#93a5cf", "#cf9aa4", "#94bfa1", "#b9a0d4", "#8dbcc8", "#cc9dbf",
+  "#a2ba90", "#87a4bc", "#86b5b3", "#b696ba", "#adbf85", "#93abc0",
 ];
 
 const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
@@ -499,17 +511,19 @@ function renderEmpty(app) {
 
 /* ---------- сводка ---------- */
 
+/* карточки сводки считаются по выбранному скоупу (сезону) */
 function renderSummary() {
-  const games = DATA.games.length;
-  const teams = DATA.scopes.all.standings.length;
-  const last = DATA.games[DATA.games.length - 1];
+  const scope = DATA.scopes[state.season] || DATA.scopes.all;
+  const games = scope.history.dates.length;
+  const teams = scope.standings.length;
+  const lastDate = scope.history.dates[scope.history.dates.length - 1];
   return `
     <div class="cards">
       <div class="card"><div class="value">${games}</div>
         <div class="label">${t("gamesPlayed")(games)}</div></div>
       <div class="card"><div class="value">${teams}</div>
         <div class="label">${t("teamsCount")(teams)}</div></div>
-      <div class="card"><div class="value">${fmtDate(last.date)}</div>
+      <div class="card"><div class="value">${fmtDate(lastDate)}</div>
         <div class="label">${t("lastGame")}</div></div>
     </div>`;
 }
@@ -518,7 +532,7 @@ function renderSummary() {
 
 function seasonButtons() {
   const opts = [["all", t("allTime")]]
-    .concat(DATA.seasons.map((s) => [s, t("season") + " " + s]));
+    .concat(DATA.seasons.map((s) => [String(s), t("season") + " " + s]));
   return `<div class="seg" id="season-seg">` + opts.map(([val, label]) =>
     `<button data-season="${val}" class="${state.season === val ? "active" : ""}">${label}</button>`
   ).join("") + `</div>`;
@@ -584,7 +598,8 @@ function renderStandingsTable() {
   ];
   const ths = cols.map(([colKey, label]) => {
     const arrow = sk === colKey
-      ? `<span class="sort-arrow">${state.sortDir === "asc" ? "▲" : "▼"}</span>` : "";
+      ? `<span class="sort-arrow active">${state.sortDir === "asc" ? "▲" : "▼"}</span>`
+      : `<span class="sort-arrow">⇅</span>`;
     const numCls = colKey === "name" ? "" : " num";
     return `<th class="sortable${numCls}" data-sort="${colKey}"` +
       ` aria-sort="${sk === colKey ? (state.sortDir === "asc" ? "ascending" : "descending") : "none"}">` +
@@ -607,6 +622,7 @@ function renderRatingBlock() {
       ${seasonButtons()}
       ${systemButtons()}
     </div>
+    <p class="sort-hint">${t("sortHint")}</p>
     <div id="standings">${renderStandingsTable()}</div>
     <h3>${t("chartHeading")}</h3>
     <div class="chart-wrap"><canvas id="ratingChart"></canvas></div>`;
@@ -677,35 +693,38 @@ function updateRatingChart() {
   const key = state.system;
   const theme = currentTheme();
   const palette = theme === "dark" ? PALETTE_DARK : PALETTE;
-  const metals = METALS[theme];
+  const top3 = TOP3_COLORS[theme];
   const ui = chartUiColors();
 
   // ранжирование команд по итоговому значению рейтинга: топ-3 получают
-  // золото/серебро/бронзу, остальные — цвета палитры по порядку мест;
-  // тем же топ-N рисуем подписи у линий
+  // яркие акцентные цвета и линии потолще, остальные — приглушённую
+  // палитру и тонкие линии; тем же топ-N рисуем подписи у линий
   const finals = history.series.map((team, i) => {
     const idx = lastNonNullIndex(team[key]);
     return { i, value: idx >= 0 ? team[key][idx] : -Infinity };
   });
   finals.sort((a, b) => b.value - a.value);
   const labeledIdx = new Set(finals.slice(0, LABELED_TEAMS).map((f) => f.i));
-  const colorOf = new Map();
-  finals.forEach((f, place) => {
-    colorOf.set(f.i, place < 3 ? metals[place] : palette[(place - 3) % palette.length]);
-  });
+  const placeOf = new Map();
+  finals.forEach((f, place) => placeOf.set(f.i, place));
 
-  const datasets = history.series.map((team, i) => ({
-    label: team.name,
-    data: team[key],
-    borderColor: colorOf.get(i),
-    backgroundColor: colorOf.get(i),
-    spanGaps: true,
-    tension: 0.25,
-    pointRadius: 2,
-    pointHoverRadius: 5,
-    borderWidth: 2,
-    showLineLabel: labeledIdx.has(i),
-  }));
+  const datasets = history.series.map((team, i) => {
+    const place = placeOf.get(i);
+    const isTop = place < 3;
+    const color = isTop ? top3[place] : palette[(place - 3) % palette.length];
+    return {
+      label: team.name,
+      data: team[key],
+      borderColor: color,
+      backgroundColor: color,
+      spanGaps: true,
+      tension: 0.25,
+      pointRadius: isTop ? 2 : 1.5,
+      pointHoverRadius: 5,
+      borderWidth: isTop ? TOP3_LINE_WIDTH : OTHER_LINE_WIDTH,
+      showLineLabel: labeledIdx.has(i),
+    };
+  });
 
   // правый отступ — под самую длинную из отображаемых подписей
   const canvas = document.getElementById("ratingChart");
@@ -762,6 +781,7 @@ function updateRatingChart() {
 }
 
 function refreshRating() {
+  document.getElementById("summary").innerHTML = renderSummary();
   document.getElementById("standings").innerHTML = renderStandingsTable();
   document.querySelectorAll("#season-seg button").forEach((b) =>
     b.classList.toggle("active", b.dataset.season === state.season));
@@ -866,6 +886,7 @@ function attachHandlers() {
     const btn = e.target.closest("button[data-season]");
     if (!btn) return;
     state.season = btn.dataset.season;
+    try { localStorage.setItem("season", state.season); } catch (e) {}
     refreshRating();
   });
   const systemSeg = document.getElementById("system-seg");
@@ -900,7 +921,7 @@ function renderApp() {
     renderEmpty(app);
   } else {
     app.innerHTML =
-      renderSummary() +
+      `<div id="summary">${renderSummary()}</div>` +
       renderRatingBlock() +
       renderGames();
     attachHandlers();
@@ -922,6 +943,16 @@ async function init() {
     DATA = await resp.json();
   } catch (e) {
     DATA = null;
+  }
+  if (DATA && DATA.games && DATA.games.length && DATA.seasons.length) {
+    // дефолт для нового посетителя — текущий (максимальный) сезон;
+    // выбор пользователя сохраняется в localStorage
+    const seasons = DATA.seasons.map(String);
+    let saved = null;
+    try { saved = localStorage.getItem("season"); } catch (e) {}
+    state.season = (saved === "all" || seasons.includes(saved))
+      ? saved
+      : seasons.reduce((a, b) => (+b > +a ? b : a));
   }
   renderApp();
 }
