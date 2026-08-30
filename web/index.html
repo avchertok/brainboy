@@ -16,6 +16,10 @@
     --border: #e5e8f0;
     --gold: #f5b301;
     --place1-bg: #fff9e6;
+    --hero-from: #4f6ef7;
+    --hero-to: #8b5cf6;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.06);
+    --shadow-lift: 0 2px 4px rgba(16, 24, 40, 0.06), 0 10px 24px rgba(16, 24, 40, 0.1);
     color-scheme: light;
   }
   html[data-theme="dark"] {
@@ -28,6 +32,10 @@
     --border: #2d3340;
     --gold: #f5c542;
     --place1-bg: #2e2a1a;
+    --hero-from: #3c4fd0;
+    --hero-to: #6f3fd4;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 10px 26px rgba(0, 0, 0, 0.42);
     color-scheme: dark;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,14 +46,51 @@
     color: var(--text);
     line-height: 1.55;
   }
-  .container { max-width: 1000px; margin: 0 auto; padding: 32px 16px 64px; }
-  header { margin-bottom: 24px; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { margin-bottom: 28px; }
+  .hero {
+    background:
+      radial-gradient(120% 160% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 55%),
+      linear-gradient(135deg, var(--hero-from), var(--hero-to));
+    border-radius: 20px;
+    padding: 28px 28px 30px;
+    color: #fff;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { color: #fff; font-size: 2.1rem; }
+  .hero .subtitle { color: rgba(255, 255, 255, 0.82); }
+  .season-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
   .header-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
   }
+  /* контролы поверх градиента — полупрозрачное «стекло» */
+  .hero #theme-toggle,
+  .hero .seg {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+  .hero #theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  .hero .seg button { color: rgba(255, 255, 255, 0.85); }
+  .hero .seg button + button { border-left-color: rgba(255, 255, 255, 0.32); }
+  .hero .seg button.active { background: #fff; color: var(--accent); }
   .header-controls {
     display: flex;
     align-items: center;
@@ -71,10 +116,26 @@
     background: var(--accent-soft);
   }
   #lang-seg button { padding: 10px 12px; font-weight: 600; }
-  h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
-  .subtitle { color: var(--muted); margin-top: 4px; }
-  h2 { font-size: 1.3rem; margin: 40px 0 14px; letter-spacing: -0.01em; }
-  h3 { font-size: 1.05rem; margin: 20px 0 10px; }
+  h1 { font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1.2; }
+  .subtitle { color: var(--muted); margin-top: 6px; }
+  h2 {
+    font-size: 1.35rem;
+    margin: 44px 0 16px;
+    letter-spacing: -0.01em;
+    position: relative;
+    padding-left: 14px;
+  }
+  h2::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    bottom: 0.2em;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(var(--hero-from), var(--hero-to));
+  }
+  h3 { font-size: 1.05rem; margin: 22px 0 10px; }
 
   .cards {
     display: grid;
@@ -86,6 +147,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px 20px;
+    box-shadow: var(--shadow);
   }
   .card .value { font-size: 1.6rem; font-weight: 700; }
   .card .label { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
@@ -125,11 +187,12 @@
 
   /* видимый намёк на подсказку у кнопки олимпийской системы */
   .hint-q {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
     margin-left: 6px;
     border: 1px solid currentColor;
     border-radius: 50%;
@@ -138,6 +201,12 @@
     line-height: 1;
     opacity: 0.75;
     vertical-align: 1px;
+  }
+  /* расширенная зона тапа вокруг маленького кружка «?» */
+  .hint-q::after {
+    content: "";
+    position: absolute;
+    inset: -12px;
   }
   /* кастомный тултип; позиционируется от .controls, поэтому
      overflow:hidden у .seg его не обрезает */
@@ -160,7 +229,6 @@
     pointer-events: none; /* не перехватывает тапы — переключение работает */
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s ease;
   }
   /* hover-показ только на устройствах с настоящим ховером: на таче iOS
      "залипающий" :hover оставлял бы тултип висеть после переключения */
@@ -170,8 +238,9 @@
       visibility: visible;
     }
   }
+  /* тап-переключение на таче: класс tip-open ставит и снимает JS */
   #system-seg button[data-system="olympic"]:focus-visible .seg-tip,
-  #system-seg button[data-system="olympic"]:active .seg-tip {
+  #system-seg button[data-system="olympic"].tip-open .seg-tip {
     opacity: 1;
     visibility: visible;
   }
@@ -182,6 +251,7 @@
     border-radius: 14px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    box-shadow: var(--shadow);
   }
   table { width: 100%; border-collapse: collapse; }
   th, td { padding: 10px 12px; text-align: left; white-space: nowrap; }
@@ -215,6 +285,131 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- подиум топ-3 над таблицей рейтинга ---- */
+  .podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 18px;
+  }
+  .p-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    padding: 16px 10px 14px;
+    min-width: 0;
+  }
+  .p-card .p-medal { font-size: 1.9rem; line-height: 1.15; }
+  .p-card .p-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .p-card .p-value {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .p-card.p1 {
+    padding-top: 24px;
+    padding-bottom: 22px;
+    border-color: var(--gold);
+    background: linear-gradient(var(--place1-bg), var(--card) 70%);
+  }
+  .p-card.p1 .p-medal { font-size: 2.3rem; }
+  .p-card.p1 .p-value { font-size: 1.55rem; }
+
+  /* ---- мобильная подача рейтинга (карточки вместо таблицы) ---- */
+  .m-standings { display: none; }
+  .m-sort { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .m-sort label { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
+  .m-sort select {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0 10px;
+  }
+  .m-sort button {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--accent);
+    font-size: 1.15rem;
+    cursor: pointer;
+  }
+  .m-team-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .m-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+    min-width: 0;
+  }
+  .m-rank {
+    flex-shrink: 0;
+    width: 34px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .m-main { flex: 1; min-width: 0; }
+  .m-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .m-chips { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 5px; }
+  .chip {
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+  .m-value { flex-shrink: 0; text-align: right; }
+  .m-value .v {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .m-value .l {
+    display: block;
+    color: var(--muted);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: -2px;
   }
 
   .game {
@@ -223,7 +418,41 @@
     border-radius: 14px;
     padding: 16px 20px;
     margin-bottom: 14px;
+    box-shadow: var(--shadow);
   }
+  /* мобильная сводка топ-3 игры и кнопка раскрытия раундов;
+     на десктопе скрыты — там таблица видна сразу */
+  .g-top3 { display: none; list-style: none; margin: 2px 0 10px; }
+  .g-top3 li { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 3px 0; }
+  .g-top3 .g-medal { flex-shrink: 0; }
+  .g-top3 .g-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .g-top3 .g-pts { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .game-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .game-toggle .g-arrow { font-size: 0.75em; }
+  .game.expanded .game-toggle { margin-bottom: 10px; }
+  .game.expanded .g-arrow { display: inline-block; transform: rotate(180deg); }
   .game-head {
     display: flex;
     flex-wrap: wrap;
@@ -277,10 +506,12 @@
   footer { margin-top: 44px; color: var(--muted); font-size: 0.82rem; }
 
   @media (max-width: 640px) {
-    .container { padding-top: 20px; }
+    .container { padding-top: 14px; }
+    .hero { padding: 20px 18px 22px; border-radius: 16px; }
+    .hero h1 { font-size: 1.5rem; }
+    .hero .subtitle { font-size: 0.9rem; }
     h1 { font-size: 1.45rem; }
     h2 { font-size: 1.15rem; margin-top: 32px; }
-    .header-top { flex-wrap: wrap; }
     .cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .card { padding: 12px 14px; min-width: 0; }
     .card .value { font-size: 1.3rem; overflow-wrap: break-word; }
@@ -289,8 +520,20 @@
        не растягивая страницу; min-height кнопок сохраняет тач-таргет */
     .seg { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .seg button { padding: 7px 10px; font-size: 0.82rem; }
-    /* при горизонтальном скролле таблиц колонка с названием команды
-       закреплена; фон обязателен, иначе под ней просвечивают цифры */
+
+    /* рейтинг: вместо широкой таблицы — карточки команд с выбором
+       сортировки; горизонтальный скролл не нужен */
+    #standings .table-wrap { display: none; }
+    .sort-hint { display: none; }
+    .m-standings { display: block; }
+
+    /* игры: по умолчанию виден топ-3, полная таблица раундов
+       раскрывается кнопкой; внутри раскрытой таблицы скролл со
+       sticky-колонкой команды */
+    #games .game .table-wrap { display: none; }
+    #games .game.expanded .table-wrap { display: block; }
+    .g-top3 { display: block; }
+    .game-toggle { display: flex; }
     .table-wrap th:nth-child(2),
     .table-wrap td:nth-child(2) {
       position: sticky;
@@ -303,8 +546,38 @@
       box-shadow: inset -1px 0 0 var(--border);
     }
     .table-wrap tr.place-1 td:nth-child(2) { background: var(--place1-bg); }
+
+    .podium { gap: 8px; }
+    .p-card { padding: 12px 6px 10px; border-radius: 14px; }
+    .p-card .p-medal { font-size: 1.5rem; }
+    .p-card.p1 .p-medal { font-size: 1.9rem; }
+    .p-card .p-name { font-size: 0.8rem; }
+    .p-card .p-value { font-size: 1.1rem; }
+    .p-card.p1 .p-value { font-size: 1.3rem; }
+
     .chart-wrap { height: 340px; padding: 12px; }
     .game { padding: 12px 14px; }
+  }
+
+  /* сдержанные анимации; полностью отключаются при reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    #app > *, .hero { animation: fadeUp 0.45s ease both; }
+    .seg button, #theme-toggle, .card, .p-card, .m-team, .game-toggle,
+    .m-sort button, th.sortable {
+      transition: background-color 0.18s ease, color 0.18s ease,
+        border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .seg-tip { transition: opacity 0.15s ease; }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .card:hover, .p-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+    }
   }
 </style>
 <script>
@@ -322,18 +595,21 @@
 <body>
 <div class="container">
   <header>
-    <div class="header-top">
-      <div>
-        <h1 data-i18n="title">BrainBoy Abu Dhabi</h1>
-        <p class="subtitle" data-i18n="subtitle">Рейтинг квиз-команд · игры по воскресеньям, 8 раундов</p>
-      </div>
-      <div class="header-controls">
-        <div class="seg" id="lang-seg">
-          <button type="button" data-lang="ru">RU</button>
-          <button type="button" data-lang="en">EN</button>
+    <div class="hero">
+      <div class="header-top">
+        <div class="hero-text">
+          <span class="season-badge" id="season-badge" hidden></span>
+          <h1 data-i18n="title">BrainBoy Abu Dhabi</h1>
+          <p class="subtitle" data-i18n="subtitle">Рейтинг квиз-команд · игры по воскресеньям, 8 раундов</p>
         </div>
-        <button id="theme-toggle" type="button" title="Переключить тему"
-          aria-label="Переключить светлую/тёмную тему">🌙</button>
+        <div class="header-controls">
+          <div class="seg" id="lang-seg">
+            <button type="button" data-lang="ru">RU</button>
+            <button type="button" data-lang="en">EN</button>
+          </div>
+          <button id="theme-toggle" type="button" title="Переключить тему"
+            aria-label="Переключить светлую/тёмную тему">🌙</button>
+        </div>
       </div>
     </div>
   </header>
@@ -385,6 +661,10 @@ const I18N = {
     colAvg: "Ср. очки",
     colBest: "Лучшее место",
     sortHint: "Кликните по заголовку столбца, чтобы отсортировать таблицу",
+    sortBy: "Сортировка",
+    sortDirAria: "Сменить направление сортировки",
+    showRounds: "Показать раунды",
+    hideRounds: "Скрыть раунды",
     chartHeading: "Динамика рейтинга",
     yPoints: "Сумма очков",
     yOlympic: "Олимпийские очки",
@@ -423,6 +703,10 @@ const I18N = {
     colAvg: "Avg points",
     colBest: "Best place",
     sortHint: "Click a column header to sort the table",
+    sortBy: "Sort by",
+    sortDirAria: "Toggle sort direction",
+    showRounds: "Show rounds",
+    hideRounds: "Hide rounds",
     chartHeading: "Rating over time",
     yPoints: "Total points",
     yOlympic: "Olympic points",
@@ -578,15 +862,92 @@ function systemButtons() {
   ).join("") + `</div>`;
 }
 
+/* подписи столбцов; используются и таблицей, и мобильными карточками */
+function colLabels(key) {
+  return {
+    rank: "#",
+    name: t("colTeam"),
+    rating: key === "points" ? t("colPoints") : t("colOlympic"),
+    games_played: t("colGames"),
+    wins: t("colWins"),
+    podiums: t("colPodiums"),
+    avg_points: t("colAvg"),
+    best_place: t("colBest"),
+  };
+}
+
+/* подиум топ-3 по рейтингу активной системы (порядок карточек 2-1-3) */
+function renderPodium(baseTeams, key) {
+  if (baseTeams.length < 3) return "";
+  const order = [baseTeams[1], baseTeams[0], baseTeams[2]];
+  return `<div class="podium">` + order.map((team) => {
+    const v = key === "points" ? team.points : team.olympic;
+    return `
+      <div class="p-card p${team.rank}">
+        <div class="p-medal">${MEDALS[team.rank]}</div>
+        <div class="p-name" title="${esc(team.name)}">${esc(team.name)}</div>
+        <div class="p-value">${v}</div>
+      </div>`;
+  }).join("") + `</div>`;
+}
+
+/* мобильная подача рейтинга: селектор сортировки + карточки команд,
+   крупно — метрика активной сортировки, остальное чипсами */
+function renderMobileStandings(teams, key) {
+  const labels = colLabels(key);
+  const sk = state.sortKey;
+  const bigKey = (sk === "rank" || sk === "name") ? "rating" : sk;
+  const metricVal = (team, k) =>
+    k === "rating" ? (key === "points" ? team.points : team.olympic) : team[k];
+
+  const sortOptions = ["rating", "games_played", "wins", "podiums", "avg_points", "best_place", "name"]
+    .map((k) =>
+      `<option value="${k}" ${sk === k ? "selected" : ""}>${labels[k]}</option>`
+    ).join("");
+
+  const chipKeys = ["rating", "games_played", "wins", "podiums", "avg_points", "best_place"]
+    .filter((k) => k !== bigKey);
+
+  const items = teams.map((team) => {
+    const chips = chipKeys.map((k) =>
+      `<span class="chip">${labels[k]} <b>${metricVal(team, k) ?? "—"}</b></span>`
+    ).join("");
+    return `
+      <li class="m-team">
+        <span class="m-rank">${MEDALS[team.rank] || team.rank}</span>
+        <div class="m-main">
+          <div class="m-name">${esc(team.name)}</div>
+          <div class="m-chips">${chips}</div>
+        </div>
+        <div class="m-value">
+          <span class="v">${metricVal(team, bigKey) ?? "—"}</span>
+          <span class="l">${labels[bigKey]}</span>
+        </div>
+      </li>`;
+  }).join("");
+
+  return `
+    <div class="m-standings">
+      <div class="m-sort">
+        <label for="m-sort-key">${t("sortBy")}</label>
+        <select id="m-sort-key">${sortOptions}</select>
+        <button id="m-sort-dir" type="button" aria-label="${esc(t("sortDirAria"))}">
+          ${state.sortDir === "asc" ? "↑" : "↓"}</button>
+      </div>
+      <ol class="m-team-list">${items}</ol>
+    </div>`;
+}
+
 function renderStandingsTable() {
   const scope = DATA.scopes[state.season] || DATA.scopes.all;
   const key = state.system;
 
   /* базовый порядок — по рейтингу активной системы; rank запоминается,
      чтобы колонка «#» всегда показывала исходное место в рейтинге */
-  const teams = [...scope.standings]
+  const baseTeams = [...scope.standings]
     .sort((a, b) => (b[key] - a[key]) || (b.points - a.points) || a.name.localeCompare(b.name, lang))
     .map((team, i) => ({ ...team, rank: i + 1 }));
+  const teams = [...baseTeams];
 
   const sk = state.sortKey;
   const dir = state.sortDir === "asc" ? 1 : -1;
@@ -616,16 +977,9 @@ function renderStandingsTable() {
       </tr>`;
   }).join("");
 
-  const cols = [
-    ["rank", "#"],
-    ["name", t("colTeam")],
-    ["rating", key === "points" ? t("colPoints") : t("colOlympic")],
-    ["games_played", t("colGames")],
-    ["wins", t("colWins")],
-    ["podiums", t("colPodiums")],
-    ["avg_points", t("colAvg")],
-    ["best_place", t("colBest")],
-  ];
+  const labels = colLabels(key);
+  const cols = ["rank", "name", "rating", "games_played", "wins",
+    "podiums", "avg_points", "best_place"].map((k) => [k, labels[k]]);
   const ths = cols.map(([colKey, label]) => {
     const arrow = sk === colKey
       ? `<span class="sort-arrow active">${state.sortDir === "asc" ? "▲" : "▼"}</span>`
@@ -636,7 +990,8 @@ function renderStandingsTable() {
       `${label}${arrow}</th>`;
   }).join("");
 
-  return `
+  return renderPodium(baseTeams, key) +
+    renderMobileStandings(teams, key) + `
     <div class="table-wrap">
       <table>
         <thead><tr>${ths}</tr></thead>
@@ -869,12 +1224,30 @@ function renderGames() {
 
     const meta = [fmtDate(g.date), g.venue ? esc(g.venue) : null]
       .filter(Boolean).join(" · ");
+
+    /* мобильная сводка: топ-3 игры с итоговыми очками виден сразу,
+       полная таблица раундов раскрывается кнопкой */
+    const top3 = g.teams
+      .filter((team) => team.place >= 1 && team.place <= 3)
+      .sort((a, b) => a.place - b.place)
+      .slice(0, 3);
+    const top3Html = top3.length ? `<ol class="g-top3">` + top3.map((team) => `
+      <li>
+        <span class="g-medal">${MEDALS[team.place]}</span>
+        <span class="g-name">${esc(team.name)}</span>
+        <span class="g-pts">${team.total ?? "—"}</span>
+      </li>`).join("") + `</ol>` : "";
+
     return `
       <div class="game">
         <div class="game-head">
           <span class="game-title">${esc(g.title || t("game") + " " + fmtDate(g.date))}</span>
           <span class="game-meta">${meta}</span>
         </div>
+        ${top3Html}
+        <button class="game-toggle" type="button" aria-expanded="false">
+          <span class="g-label">${t("showRounds")}</span><span class="g-arrow">▼</span>
+        </button>
         <div class="table-wrap">
           <table>
             <thead><tr>
@@ -889,7 +1262,7 @@ function renderGames() {
   return `
     <h2>${t("gamesHeading")}</h2>
     <p class="games-note" style="margin:-6px 0 14px">${t("gamesNote")}</p>
-    ${items}`;
+    <div id="games">${items}</div>`;
 }
 
 /* ---------- переключение языка ---------- */
@@ -948,32 +1321,81 @@ function attachHandlers() {
   });
   const systemSeg = document.getElementById("system-seg");
   if (systemSeg) systemSeg.addEventListener("click", (e) => {
+    /* тап точно по «?» открывает/закрывает тултип и не переключает
+       систему; закрытие тапом мимо — глобальный обработчик ниже */
+    const q = e.target.closest(".hint-q");
+    if (q) {
+      q.closest("button").classList.toggle("tip-open");
+      return;
+    }
     const btn = e.target.closest("button[data-system]");
     if (!btn) return;
     state.system = btn.dataset.system;
     refreshRating();
   });
-  /* делегированный обработчик сортировки; висит на контейнере #standings,
+  /* делегированные обработчики сортировки; висят на контейнере #standings,
      который переживает перерисовки таблицы через innerHTML */
   const standings = document.getElementById("standings");
-  if (standings) standings.addEventListener("click", (e) => {
-    const th = e.target.closest("th[data-sort]");
-    if (!th) return;
-    const colKey = th.dataset.sort;
-    if (state.sortKey === colKey) {
-      state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-    } else {
-      state.sortKey = colKey;
-      state.sortDir = SORT_DEFAULT_DIR[colKey] || "desc";
-    }
-    standings.innerHTML = renderStandingsTable();
+  if (standings) {
+    standings.addEventListener("click", (e) => {
+      const dirBtn = e.target.closest("#m-sort-dir");
+      if (dirBtn) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        standings.innerHTML = renderStandingsTable();
+        return;
+      }
+      const th = e.target.closest("th[data-sort]");
+      if (!th) return;
+      const colKey = th.dataset.sort;
+      if (state.sortKey === colKey) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.sortKey = colKey;
+        state.sortDir = SORT_DEFAULT_DIR[colKey] || "desc";
+      }
+      standings.innerHTML = renderStandingsTable();
+    });
+    /* мобильный селектор «сортировать по…» */
+    standings.addEventListener("change", (e) => {
+      const sel = e.target.closest("#m-sort-key");
+      if (!sel) return;
+      state.sortKey = sel.value;
+      state.sortDir = SORT_DEFAULT_DIR[sel.value] || "desc";
+      standings.innerHTML = renderStandingsTable();
+    });
+  }
+  /* аккордеоны игр на мобильном */
+  const games = document.getElementById("games");
+  if (games) games.addEventListener("click", (e) => {
+    const btn = e.target.closest(".game-toggle");
+    if (!btn) return;
+    const expanded = btn.closest(".game").classList.toggle("expanded");
+    btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    btn.querySelector(".g-label").textContent =
+      expanded ? t("hideRounds") : t("showRounds");
   });
 }
+
+/* тап мимо «?» закрывает открытый тултип олимпийской системы */
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".hint-q")) return;
+  document.querySelectorAll("#system-seg button.tip-open")
+    .forEach((el) => el.classList.remove("tip-open"));
+});
 
 /* полная перерисовка контента (после загрузки данных и при смене языка);
    innerHTML заменяет старые узлы, поэтому обработчики не дублируются */
 function renderApp() {
   const app = document.getElementById("app");
+  const badge = document.getElementById("season-badge");
+  if (badge) {
+    const hasSeasons = DATA && DATA.seasons && DATA.seasons.length > 0;
+    badge.hidden = !hasSeasons;
+    if (hasSeasons) {
+      const current = DATA.seasons.map(String).reduce((a, b) => (+b > +a ? b : a));
+      badge.textContent = t("season") + " " + current;
+    }
+  }
   if (!DATA || !DATA.games || DATA.games.length === 0) {
     renderEmpty(app);
   } else {
