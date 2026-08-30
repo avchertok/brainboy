@@ -6,13 +6,15 @@
       "team_aliases": {"вариант названия": "Каноническое имя"},
       "games": [
         {"date": "YYYY-MM-DD", "title": "...", "venue": "...",
+         "season": 2025,  # необязательно: переопределение сезона
          "teams": [{"name": "...", "place": число,
                     "rounds": [8 чисел или null], "total": число}]}
       ]
     }
 
-Сезон = календарный год даты игры (вычисляется здесь, в results.json не
-хранится). Скрипт считает:
+Сезон = необязательное поле "season" игры, а если его нет — календарный
+год даты игры. Переопределённые игры помечаются в web/data.json флагом
+season_override. Скрипт считает:
   - стендинги за всё время и по каждому сезону в двух системах:
     "по сумме очков" (сумма total) и "олимпийская" (1 место = 3, 2 = 2, 3 = 1);
   - историю накопительного рейтинга по датам игр (для графика) в обеих системах;
@@ -58,7 +60,9 @@ def canonical_name(name, aliases):
 
 
 def season_of(game):
-    """Season = calendar year of the game date."""
+    """Season = explicit "season" override if set, else calendar year of the date."""
+    if game.get("season") is not None:
+        return str(game["season"])
     date = game.get("date") or ""
     return date[:4] if len(date) >= 4 else None
 
@@ -68,7 +72,10 @@ def normalize_games(games, aliases):
     result = []
     for game in sorted(games, key=lambda g: g.get("date") or ""):
         game = dict(game)
+        override = game.get("season") is not None
         game["season"] = season_of(game)
+        if override:
+            game["season_override"] = True
         teams = []
         for t in game.get("teams", []):
             t = dict(t)

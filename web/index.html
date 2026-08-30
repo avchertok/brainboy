@@ -473,6 +473,21 @@
     color: var(--muted); font-size: 0.8rem; margin-top: 8px;
   }
 
+  /* пометка у игры, засчитанной в другой сезон (полупрозрачный фон) */
+  .season-override-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: 999px;
+    padding: 1px 9px;
+    white-space: nowrap;
+  }
+  /* сноска о переопределении сезона под таблицей рейтинга */
+  .season-note { color: var(--muted); font-size: 0.78rem; margin-top: 8px; }
+
   .leader-badge {
     display: inline-flex;
     align-items: center;
@@ -652,6 +667,8 @@ const I18N = {
     byPoints: "По сумме очков",
     olympic: "Олимпийская система",
     olympicHint: "1 место — 3 балла, 2 место — 2, 3 место — 1 (за каждую игру)",
+    seasonOverrideNote: (date, season) =>
+      `* Игра от ${date} засчитана в сезон ${season} по решению организатора`,
     colTeam: "Команда",
     colPoints: "Очки",
     colOlympic: "Олимп. очки",
@@ -694,6 +711,8 @@ const I18N = {
     byPoints: "Total points",
     olympic: "Olympic system",
     olympicHint: "1st place — 3 pts, 2nd — 2, 3rd — 1 (per game)",
+    seasonOverrideNote: (date, season) =>
+      `* The ${date} game counts toward the ${season} season per the organizer's decision`,
     colTeam: "Team",
     colPoints: "Points",
     colOlympic: "Olympic pts",
@@ -997,7 +1016,24 @@ function renderStandingsTable() {
         <thead><tr>${ths}</tr></thead>
         <tbody>${rows || ""}</tbody>
       </table>
-    </div>`;
+    </div>` +
+    renderSeasonOverrideNotes();
+}
+
+/* сноски о играх, засчитанных в другой сезон; показываются, когда выбран
+   сезонный скоуп, которого касается переопределение (сезон зачёта или
+   «естественный» сезон по дате игры) */
+function renderSeasonOverrideNotes() {
+  const notes = (DATA.games || [])
+    .filter((g) => {
+      if (!g.season_override) return false;
+      const naturalSeason = (g.date || "").slice(0, 4);
+      return state.season === String(g.season) || state.season === naturalSeason;
+    })
+    .map((g) =>
+      `<p class="season-note">${esc(t("seasonOverrideNote")(fmtDate(g.date), g.season))}</p>`
+    );
+  return notes.join("");
 }
 
 function renderRatingBlock() {
@@ -1224,6 +1260,9 @@ function renderGames() {
 
     const meta = [fmtDate(g.date), g.venue ? esc(g.venue) : null]
       .filter(Boolean).join(" · ");
+    const seasonBadge = g.season_override
+      ? `<span class="season-override-badge">${esc(t("season") + " " + g.season)}</span>`
+      : "";
 
     /* мобильная сводка: топ-3 игры с итоговыми очками виден сразу,
        полная таблица раундов раскрывается кнопкой */
@@ -1243,6 +1282,7 @@ function renderGames() {
         <div class="game-head">
           <span class="game-title">${esc(g.title || t("game") + " " + fmtDate(g.date))}</span>
           <span class="game-meta">${meta}</span>
+          ${seasonBadge}
         </div>
         ${top3Html}
         <button class="game-toggle" type="button" aria-expanded="false">
