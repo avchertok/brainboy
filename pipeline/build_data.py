@@ -14,7 +14,16 @@
 
 Сезон = необязательное поле "season" игры, а если его нет — календарный
 год даты игры. Переопределённые игры помечаются в web/data.json флагом
-season_override. Скрипт считает:
+season_override.
+
+Гостевые команды: участник игры с "guest": true (+ необязательный "city"
+для плашки) показывается в таблице игры, но играет вне зачёта — он не
+попадает ни в стендинги, ни в историю рейтинга, ни в статистику раундов.
+Поле "place" хранит общее место как на фото; для не-гостей скрипт
+дополнительно считает effective_place — место среди не-гостей, именно оно
+идёт в олимпийскую систему, победы и подиумы.
+
+Скрипт считает:
   - стендинги за всё время и по каждому сезону в двух системах:
     "по сумме очков" (сумма total) и "олимпийская" (1 место = 3, 2 = 2, 3 = 1);
   - историю накопительного рейтинга по датам игр (для графика) в обеих системах;
@@ -89,9 +98,26 @@ def normalize_games(games, aliases):
                 t["total"] = sum(known) if known else 0
             teams.append(t)
         teams.sort(key=lambda t: (t.get("place") is None, t.get("place")))
+        # место среди не-гостей: гости играют вне зачёта, поэтому в
+        # олимпийскую систему и статистику идёт effective_place
+        effective = 0
+        for t in teams:
+            if t.get("guest"):
+                continue
+            if t.get("place") is not None:
+                effective += 1
+                t["effective_place"] = effective
         game["teams"] = teams
         result.append(game)
     return result
+
+
+def scored_entries(game):
+    """Teams that count toward standings (non-guests) with their effective place."""
+    for entry in game["teams"]:
+        if entry.get("guest"):
+            continue
+        yield entry, entry.get("effective_place", entry.get("place"))
 
 
 def olympic_for_place(place):
@@ -102,7 +128,7 @@ def build_standings(games):
     """Per-team standings for a list of games (one scope)."""
     teams = {}
     for game in games:
-        for entry in game["teams"]:
+        for entry, place in scored_entries(game):
             team = teams.setdefault(
                 entry["name"],
                 {
@@ -115,7 +141,6 @@ def build_standings(games):
                     "best_place": None,
                 },
             )
-            place = entry.get("place")
             total = entry.get("total") or 0
             team["games_played"] += 1
             team["points"] += total
@@ -153,13 +178,11 @@ def build_history(games):
         idx = date_index.get(game.get("date"))
         if idx is None:
             continue
-        for entry in game["teams"]:
+        for entry, place in scored_entries(game):
             slot = per_team[entry["name"]]
             gained = entry.get("total") or 0
             slot["points"][idx] = (slot["points"][idx] or 0) + gained
-            slot["olympic"][idx] = (slot["olympic"][idx] or 0) + olympic_for_place(
-                entry.get("place")
-            )
+            slot["olympic"][idx] = (slot["olympic"][idx] or 0) + olympic_for_place(place)
 
     series = []
     for name in sorted(per_team):
@@ -180,7 +203,7 @@ def build_round_stats(games):
     """Average points per round per team + captain's round leader."""
     per_team = defaultdict(lambda: [[] for _ in range(ROUNDS_COUNT)])
     for game in games:
-        for entry in game["teams"]:
+        for entry, _place in scored_entries(game):
             for i, value in enumerate(entry["rounds"][:ROUNDS_COUNT]):
                 if value is not None:
                     per_team[entry["name"]][i].append(value)

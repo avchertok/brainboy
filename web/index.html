@@ -469,6 +469,40 @@
   }
   .place-1 td { background: var(--place1-bg); }
 
+  /* гостевые команды (вне зачёта): полупрозрачная строка + плашка города */
+  tr.guest-row td { opacity: 0.55; }
+  .city-tag {
+    display: inline-block;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 7px;
+    margin-left: 6px;
+    vertical-align: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  /* общее место (как на фото) мелко рядом с зачётным */
+  .overall-place { color: var(--muted); font-size: 0.78em; font-weight: 400; }
+  /* сноска под таблицей игры с гостями */
+  .guest-note { color: var(--muted); font-size: 0.78rem; margin-top: 8px; }
+
+  /* бейдж титула игры (например, «Чемпионат ОАЭ») рядом с датой */
+  .game-title-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--gold) 65%, var(--text));
+    background: color-mix(in srgb, var(--gold) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    border-radius: 999px;
+    padding: 1px 9px;
+    white-space: nowrap;
+  }
+
   .games-note {
     color: var(--muted); font-size: 0.8rem; margin-top: 8px;
   }
@@ -691,6 +725,9 @@ const I18N = {
     colTotal: "Итог",
     roundPrefix: "Р",
     game: "Игра",
+    gameTitle: (s) => s,
+    cityName: (s) => s,
+    guestNote: "Гостевые команды (Дубай) показаны вне зачёта",
     emptyTitle: "Данных пока нет",
     emptyText: "Результаты игр появятся здесь после первой обработки фотографий таблиц.",
     emptyHow: "Как добавить: черновики из <code>vision_extract.py</code> → " +
@@ -735,6 +772,9 @@ const I18N = {
     colTotal: "Total",
     roundPrefix: "R",
     game: "Game",
+    gameTitle: (s) => ({ "Чемпионат ОАЭ": "UAE Championship" }[s] || s),
+    cityName: (s) => ({ "Дубай": "Dubai", "Абу-Даби": "Abu Dhabi" }[s] || s),
+    guestNote: "Guest teams (Dubai) shown out of competition",
     emptyTitle: "No data yet",
     emptyText: "Game results will appear here once the first table photos are processed.",
     emptyHow: "To add data: drafts from <code>vision_extract.py</code> → " +
@@ -1246,13 +1286,35 @@ function renderGames() {
     `<th class="round">${t("roundPrefix")}${i + 1}</th>`).join("");
 
   const items = [...DATA.games].reverse().map((g) => {
+    /* гости (guest: true) показываются вне зачёта: строка полупрозрачная,
+       в столбце места — общее место в скобках; у не-гостей зачётное
+       место — effective_place (место среди не-гостей), общее — мелко рядом */
+    const hasGuests = g.teams.some((team) => team.guest);
+    const effPlace = (team) =>
+      team.guest ? null : (team.effective_place ?? team.place);
+
     const rows = g.teams.map((team) => {
       const cells = team.rounds.map((v) =>
         `<td class="round">${v ?? "—"}</td>`).join("");
+      const eff = effPlace(team);
+      let placeCell;
+      if (team.guest) {
+        placeCell = `<span class="overall-place">(${team.place ?? "—"})</span>`;
+      } else {
+        placeCell = `${MEDALS[eff] ?? eff ?? "—"}`;
+        if (hasGuests && team.place != null && team.place !== eff) {
+          placeCell += ` <span class="overall-place">(${team.place})</span>`;
+        }
+      }
+      const cityTag = team.guest
+        ? `<span class="city-tag">${esc(t("cityName")(team.city || "Дубай"))}</span>`
+        : "";
+      const rowCls = [eff === 1 ? "place-1" : "", team.guest ? "guest-row" : ""]
+        .filter(Boolean).join(" ");
       return `
-        <tr class="${team.place === 1 ? "place-1" : ""}">
-          <td class="num">${MEDALS[team.place] ?? team.place ?? "—"}</td>
-          <td class="team-name">${esc(team.name)}</td>
+        <tr class="${rowCls}">
+          <td class="num">${placeCell}</td>
+          <td class="team-name">${esc(team.name)}${cityTag}</td>
           ${cells}
           <td class="num rating-col">${team.total ?? "—"}</td>
         </tr>`;
@@ -1260,19 +1322,26 @@ function renderGames() {
 
     const meta = [fmtDate(g.date), g.venue ? esc(g.venue) : null]
       .filter(Boolean).join(" · ");
+    const titleBadge = g.title
+      ? `<span class="game-title-badge">${esc(t("gameTitle")(g.title))}</span>`
+      : "";
     const seasonBadge = g.season_override
       ? `<span class="season-override-badge">${esc(t("season") + " " + g.season)}</span>`
       : "";
+    const guestNote = hasGuests
+      ? `<p class="guest-note">${esc(t("guestNote"))}</p>`
+      : "";
 
     /* мобильная сводка: топ-3 игры с итоговыми очками виден сразу,
-       полная таблица раундов раскрывается кнопкой */
+       полная таблица раундов раскрывается кнопкой; гости в топ-3 не
+       попадают — он строится по зачётным местам */
     const top3 = g.teams
-      .filter((team) => team.place >= 1 && team.place <= 3)
-      .sort((a, b) => a.place - b.place)
+      .filter((team) => effPlace(team) >= 1 && effPlace(team) <= 3)
+      .sort((a, b) => effPlace(a) - effPlace(b))
       .slice(0, 3);
     const top3Html = top3.length ? `<ol class="g-top3">` + top3.map((team) => `
       <li>
-        <span class="g-medal">${MEDALS[team.place]}</span>
+        <span class="g-medal">${MEDALS[effPlace(team)]}</span>
         <span class="g-name">${esc(team.name)}</span>
         <span class="g-pts">${team.total ?? "—"}</span>
       </li>`).join("") + `</ol>` : "";
@@ -1280,8 +1349,9 @@ function renderGames() {
     return `
       <div class="game">
         <div class="game-head">
-          <span class="game-title">${esc(g.title || t("game") + " " + fmtDate(g.date))}</span>
+          <span class="game-title">${esc(t("game") + " " + fmtDate(g.date))}</span>
           <span class="game-meta">${meta}</span>
+          ${titleBadge}
           ${seasonBadge}
         </div>
         ${top3Html}
@@ -1296,6 +1366,7 @@ function renderGames() {
             <tbody>${rows}</tbody>
           </table>
         </div>
+        ${guestNote}
       </div>`;
   }).join("");
 
