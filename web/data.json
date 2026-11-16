@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T20:35:37.280946+00:00",
+  "generated_at": "2026-11-16T08:27:52.670936+00:00",
   "rounds_count": 8,
   "seasons": [
     "2025",
@@ -6850,6 +6850,156 @@
         }
       ],
       "season": "2026"
+    },
+    {
+      "date": "2026-11-15",
+      "teams": [
+        {
+          "name": "Даём случайные ответы",
+          "place": 1,
+          "rounds": [
+            5,
+            6,
+            5,
+            12,
+            10,
+            6,
+            13,
+            1
+          ],
+          "total": 58,
+          "effective_place": 1
+        },
+        {
+          "name": "Соль земли",
+          "place": 2,
+          "rounds": [
+            4,
+            5,
+            5,
+            9,
+            10,
+            6,
+            16,
+            1
+          ],
+          "total": 56,
+          "effective_place": 2
+        },
+        {
+          "name": "Серпентарий",
+          "place": 3,
+          "rounds": [
+            6,
+            5,
+            5,
+            5,
+            11,
+            4,
+            14,
+            4
+          ],
+          "total": 54,
+          "effective_place": 3
+        },
+        {
+          "name": "НеЗОЖ",
+          "place": 4,
+          "rounds": [
+            6,
+            1,
+            3,
+            10,
+            6,
+            4,
+            15,
+            4
+          ],
+          "total": 49,
+          "effective_place": 4
+        },
+        {
+          "name": "Хорошая Компания",
+          "place": 5,
+          "rounds": [
+            6,
+            5,
+            2,
+            6,
+            7,
+            6,
+            16,
+            0
+          ],
+          "total": 48,
+          "effective_place": 5
+        },
+        {
+          "name": "Естественный интеллект",
+          "place": 6,
+          "rounds": [
+            5,
+            5,
+            5,
+            7,
+            8,
+            4,
+            13,
+            0
+          ],
+          "total": 47,
+          "effective_place": 6
+        },
+        {
+          "name": "Победители Дивана",
+          "place": 7,
+          "rounds": [
+            6,
+            6,
+            4,
+            4,
+            8,
+            4,
+            12,
+            0
+          ],
+          "total": 44,
+          "effective_place": 7
+        },
+        {
+          "name": "Talabat",
+          "place": 8,
+          "rounds": [
+            3,
+            0,
+            5,
+            1,
+            10,
+            4,
+            3,
+            1
+          ],
+          "total": 27,
+          "effective_place": 8
+        },
+        {
+          "name": "Могучая Кучка",
+          "place": 9,
+          "rounds": [
+            2,
+            2,
+            3,
+            5,
+            3,
+            2,
+            7,
+            0
+          ],
+          "total": 24,
+          "effective_place": 9
+        }
+      ],
+      "season": "2026"
     }
   ],
   "scopes": {
@@ -6857,73 +7007,73 @@
       "standings": [
         {
           "name": "Серпентарий",
-          "games_played": 60,
+          "games_played": 61,
           "wins": 19,
-          "podiums": 47,
-          "points": 2746,
-          "olympic": 107,
+          "podiums": 48,
+          "points": 2800,
+          "olympic": 108,
           "best_place": 1,
-          "avg_points": 45.8
+          "avg_points": 45.9
         },
         {
           "name": "Даём случайные ответы",
-          "games_played": 60,
-          "wins": 18,
-          "podiums": 42,
-          "points": 2663,
-          "olympic": 93,
+          "games_played": 61,
+          "wins": 19,
+          "podiums": 43,
+          "points": 2721,
+          "olympic": 96,
           "best_place": 1,
-          "avg_points": 44.4
+          "avg_points": 44.6
         },
         {
           "name": "Победители Дивана",
-          "games_played": 50,
+          "games_played": 51,
           "wins": 3,
           "podiums": 24,
-          "points": 2008,
+          "points": 2052,
           "olympic": 36,
           "best_place": 1,
           "avg_points": 40.2
         },
         {
           "name": "Соль земли",
-          "games_played": 45,
+          "games_played": 46,
           "wins": 6,
-          "podiums": 26,
-          "points": 1889,
-          "olympic": 46,
+          "podiums": 27,
+          "points": 1945,
+          "olympic": 48,
           "best_place": 1,
-          "avg_points": 42.0
+          "avg_points": 42.3
         },
         {
           "name": "Естественный интеллект",
-          "games_played": 40,
+          "games_played": 41,
           "wins": 8,
           "podiums": 19,
-          "points": 1666,
+          "points": 1713,
           "olympic": 41,
           "best_place": 1,
-          "avg_points": 41.6
+          "avg_points": 41.8
         },
         {
           "name": "Хорошая Компания",
-          "games_played": 36,
+          "games_played": 37,
           "wins": 3,
           "podiums": 10,
-          "points": 1386,
+          "points": 1434,
           "olympic": 18,
           "best_place": 1,
-          "avg_points": 38.5
+          "avg_points": 38.8
         },
         {
           "name": "Talabat",
-          "games_played": 17,
+          "games_played": 18,
           "wins": 0,
           "podiums": 0,
-          "points": 442,
+          "points": 469,
           "olympic": 0,
           "best_place": 4,
-          "avg_points": 26.0
+          "avg_points": 26.1
         },
         {
           "name": "Шнур от утюга",
@@ -7054,6 +7204,16 @@
           "olympic": 2,
           "best_place": 2,
           "avg_points": 51.0
+        },
+        {
+          "name": "НеЗОЖ",
+          "games_played": 1,
+          "wins": 0,
+          "podiums": 0,
+          "points": 49,
+          "olympic": 0,
+          "best_place": 4,
+          "avg_points": 49.0
         },
         {
           "name": "Рахат-Лукумчики",
@@ -7246,6 +7406,16 @@
           "avg_points": 27.0
         },
         {
+          "name": "Могучая Кучка",
+          "games_played": 1,
+          "wins": 0,
+          "podiums": 0,
+          "points": 24,
+          "olympic": 0,
+          "best_place": 9,
+          "avg_points": 24.0
+        },
+        {
           "name": "Russian Salad",
           "games_played": 1,
           "wins": 0,
@@ -7419,7 +7589,8 @@
           "2026-10-11",
           "2026-10-25",
           "2026-11-01",
-          "2026-11-08"
+          "2026-11-08",
+          "2026-11-15"
         ],
         "series": [
           {
@@ -7486,11 +7657,13 @@
               38,
               38,
               38,
+              38,
               38
             ],
             "olympic": [
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -7617,9 +7790,11 @@
               28,
               28,
               28,
+              28,
               28
             ],
             "olympic": [
+              1,
               1,
               1,
               1,
@@ -7748,6 +7923,7 @@
               15,
               15,
               15,
+              15,
               15
             ],
             "olympic": [
@@ -7759,6 +7935,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -7879,6 +8056,7 @@
               16,
               16,
               16,
+              16,
               16
             ],
             "olympic": [
@@ -7891,6 +8069,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -8010,10 +8189,12 @@
               81,
               81,
               81,
+              81,
               81
             ],
             "olympic": [
               3,
+              6,
               6,
               6,
               6,
@@ -8141,10 +8322,12 @@
               62,
               62,
               62,
+              62,
               62
             ],
             "olympic": [
               null,
+              0,
               0,
               0,
               0,
@@ -8272,9 +8455,11 @@
               22,
               22,
               22,
+              22,
               22
             ],
             "olympic": [
+              0,
               0,
               0,
               0,
@@ -8403,7 +8588,8 @@
               373,
               399,
               418,
-              442
+              442,
+              469
             ],
             "olympic": [
               null,
@@ -8412,6 +8598,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -8534,10 +8721,12 @@
               41,
               41,
               41,
+              41,
               41
             ],
             "olympic": [
               null,
+              0,
               0,
               0,
               0,
@@ -8665,11 +8854,13 @@
               37,
               37,
               37,
+              37,
               37
             ],
             "olympic": [
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -8796,6 +8987,7 @@
               28,
               28,
               28,
+              28,
               28
             ],
             "olympic": [
@@ -8809,6 +9001,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -8927,6 +9120,7 @@
               39,
               39,
               39,
+              39,
               39
             ],
             "olympic": [
@@ -8934,6 +9128,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -9058,6 +9253,7 @@
               33,
               33,
               33,
+              33,
               33
             ],
             "olympic": [
@@ -9075,6 +9271,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -9189,6 +9386,7 @@
               78,
               78,
               78,
+              78,
               78
             ],
             "olympic": [
@@ -9243,6 +9441,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -9320,10 +9519,12 @@
               31,
               31,
               31,
+              31,
               31
             ],
             "olympic": [
               null,
+              0,
               0,
               0,
               0,
@@ -9451,7 +9652,8 @@
               2548,
               2593,
               2631,
-              2663
+              2663,
+              2721
             ],
             "olympic": [
               0,
@@ -9515,7 +9717,8 @@
               90,
               93,
               93,
-              93
+              93,
+              96
             ]
           },
           {
@@ -9582,6 +9785,7 @@
               91,
               91,
               91,
+              91,
               91
             ],
             "olympic": [
@@ -9596,6 +9800,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -9713,6 +9918,7 @@
               38,
               38,
               38,
+              38,
               38
             ],
             "olympic": [
@@ -9747,6 +9953,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -9844,6 +10051,7 @@
               51,
               51,
               51,
+              51,
               51
             ],
             "olympic": [
@@ -9865,6 +10073,7 @@
               null,
               null,
               null,
+              2,
               2,
               2,
               2,
@@ -9975,7 +10184,8 @@
               1549,
               1593,
               1640,
-              1666
+              1666,
+              1713
             ],
             "olympic": [
               null,
@@ -10038,6 +10248,7 @@
               35,
               37,
               38,
+              41,
               41,
               41
             ]
@@ -10106,6 +10317,7 @@
               31,
               31,
               31,
+              31,
               31
             ],
             "olympic": [
@@ -10157,6 +10369,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10237,6 +10450,7 @@
               39,
               39,
               39,
+              39,
               39
             ],
             "olympic": [
@@ -10274,6 +10488,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10368,6 +10583,7 @@
               38,
               38,
               38,
+              38,
               38
             ],
             "olympic": [
@@ -10421,6 +10637,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10499,6 +10716,7 @@
               19,
               19,
               19,
+              19,
               19
             ],
             "olympic": [
@@ -10511,6 +10729,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10630,6 +10849,7 @@
               43,
               43,
               43,
+              43,
               43
             ],
             "olympic": [
@@ -10661,6 +10881,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10761,6 +10982,7 @@
               14,
               14,
               14,
+              14,
               14
             ],
             "olympic": [
@@ -10774,6 +10996,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -10892,6 +11115,7 @@
               30,
               30,
               30,
+              30,
               30
             ],
             "olympic": [
@@ -10907,6 +11131,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -11023,6 +11248,7 @@
               43,
               43,
               43,
+              43,
               43
             ],
             "olympic": [
@@ -11030,6 +11256,7 @@
               null,
               null,
               null,
+              1,
               1,
               1,
               1,
@@ -11154,6 +11381,7 @@
               179,
               179,
               179,
+              179,
               179
             ],
             "olympic": [
@@ -11165,6 +11393,7 @@
               0,
               0,
               0,
+              1,
               1,
               1,
               1,
@@ -11285,6 +11514,7 @@
               84,
               84,
               84,
+              84,
               84
             ],
             "olympic": [
@@ -11349,7 +11579,141 @@
               4,
               4,
               4,
+              4,
               4
+            ]
+          },
+          {
+            "name": "Могучая Кучка",
+            "points": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              24
+            ],
+            "olympic": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              0
             ]
           },
           {
@@ -11416,6 +11780,7 @@
               22,
               22,
               22,
+              22,
               22
             ],
             "olympic": [
@@ -11446,6 +11811,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -11547,6 +11913,7 @@
               27,
               27,
               27,
+              27,
               27
             ],
             "olympic": [
@@ -11611,6 +11978,140 @@
               0,
               0,
               0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "НеЗОЖ",
+            "points": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              49
+            ],
+            "olympic": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               0
             ]
           },
@@ -11678,6 +12179,7 @@
               21,
               21,
               21,
+              21,
               21
             ],
             "olympic": [
@@ -11686,6 +12188,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -11809,6 +12312,7 @@
               87,
               87,
               87,
+              87,
               87
             ],
             "olympic": [
@@ -11821,6 +12325,7 @@
               0,
               1,
               1,
+              2,
               2,
               2,
               2,
@@ -11940,7 +12445,8 @@
               1883,
               1928,
               1963,
-              2008
+              2008,
+              2052
             ],
             "olympic": [
               0,
@@ -12004,6 +12510,7 @@
               32,
               34,
               34,
+              36,
               36
             ]
           },
@@ -12071,6 +12578,7 @@
               21,
               21,
               21,
+              21,
               21
             ],
             "olympic": [
@@ -12115,6 +12623,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -12202,6 +12711,7 @@
               47,
               47,
               47,
+              47,
               47
             ],
             "olympic": [
@@ -12261,6 +12771,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -12333,11 +12844,13 @@
               36,
               36,
               36,
+              36,
               36
             ],
             "olympic": [
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -12464,6 +12977,7 @@
               18,
               18,
               18,
+              18,
               18
             ],
             "olympic": [
@@ -12472,6 +12986,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -12595,6 +13110,7 @@
               324,
               324,
               324,
+              324,
               324
             ],
             "olympic": [
@@ -12642,6 +13158,7 @@
               2,
               3,
               6,
+              9,
               9,
               9,
               9,
@@ -12726,7 +13243,8 @@
               2624,
               2659,
               2699,
-              2746
+              2746,
+              2800
             ],
             "olympic": [
               2,
@@ -12790,7 +13308,8 @@
               103,
               103,
               104,
-              107
+              107,
+              108
             ]
           },
           {
@@ -12857,7 +13376,8 @@
               1768,
               1807,
               1853,
-              1889
+              1889,
+              1945
             ],
             "olympic": [
               null,
@@ -12921,7 +13441,8 @@
               43,
               43,
               45,
-              46
+              46,
+              48
             ]
           },
           {
@@ -12988,6 +13509,7 @@
               164,
               164,
               164,
+              164,
               164
             ],
             "olympic": [
@@ -13020,6 +13542,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -13119,6 +13642,7 @@
               95,
               95,
               95,
+              95,
               95
             ],
             "olympic": [
@@ -13164,6 +13688,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -13250,7 +13775,8 @@
               1287,
               1323,
               1355,
-              1386
+              1386,
+              1434
             ],
             "olympic": [
               null,
@@ -13304,6 +13830,7 @@
               16,
               17,
               17,
+              18,
               18,
               18,
               18,
@@ -13381,6 +13908,7 @@
               434,
               434,
               434,
+              434,
               434
             ],
             "olympic": [
@@ -13390,6 +13918,7 @@
               2,
               2,
               4,
+              5,
               5,
               5,
               5,
@@ -13512,6 +14041,7 @@
               33,
               33,
               33,
+              33,
               33
             ],
             "olympic": [
@@ -13556,6 +14086,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -13643,6 +14174,7 @@
               53,
               53,
               53,
+              53,
               53
             ],
             "olympic": [
@@ -13666,6 +14198,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -13774,6 +14307,7 @@
               22,
               22,
               22,
+              22,
               22
             ],
             "olympic": [
@@ -13832,6 +14366,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -13905,6 +14440,7 @@
               20,
               20,
               20,
+              20,
               20
             ],
             "olympic": [
@@ -13916,6 +14452,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -16075,63 +16612,73 @@
       "standings": [
         {
           "name": "Серпентарий",
-          "games_played": 40,
+          "games_played": 41,
           "wins": 13,
-          "podiums": 28,
-          "points": 1878,
-          "olympic": 65,
+          "podiums": 29,
+          "points": 1932,
+          "olympic": 66,
           "best_place": 1,
-          "avg_points": 47.0
+          "avg_points": 47.1
         },
         {
           "name": "Даём случайные ответы",
-          "games_played": 40,
-          "wins": 11,
-          "podiums": 25,
-          "points": 1831,
-          "olympic": 56,
+          "games_played": 41,
+          "wins": 12,
+          "podiums": 26,
+          "points": 1889,
+          "olympic": 59,
           "best_place": 1,
-          "avg_points": 45.8
+          "avg_points": 46.1
         },
         {
           "name": "Соль земли",
-          "games_played": 38,
+          "games_played": 39,
           "wins": 6,
-          "podiums": 24,
-          "points": 1654,
-          "olympic": 44,
+          "podiums": 25,
+          "points": 1710,
+          "olympic": 46,
           "best_place": 1,
-          "avg_points": 43.5
+          "avg_points": 43.8
         },
         {
           "name": "Победители Дивана",
-          "games_played": 40,
+          "games_played": 41,
           "wins": 1,
           "podiums": 20,
-          "points": 1644,
+          "points": 1688,
           "olympic": 28,
           "best_place": 1,
-          "avg_points": 41.1
+          "avg_points": 41.2
         },
         {
           "name": "Естественный интеллект",
-          "games_played": 35,
+          "games_played": 36,
           "wins": 7,
           "podiums": 16,
-          "points": 1472,
+          "points": 1519,
           "olympic": 35,
           "best_place": 1,
-          "avg_points": 42.1
+          "avg_points": 42.2
         },
         {
           "name": "Хорошая Компания",
-          "games_played": 24,
+          "games_played": 25,
           "wins": 1,
           "podiums": 6,
-          "points": 951,
+          "points": 999,
           "olympic": 9,
           "best_place": 1,
-          "avg_points": 39.6
+          "avg_points": 40.0
+        },
+        {
+          "name": "Talabat",
+          "games_played": 13,
+          "wins": 0,
+          "podiums": 0,
+          "points": 349,
+          "olympic": 0,
+          "best_place": 6,
+          "avg_points": 26.8
         },
         {
           "name": "Сборная Бурятии",
@@ -16142,16 +16689,6 @@
           "olympic": 9,
           "best_place": 1,
           "avg_points": 46.3
-        },
-        {
-          "name": "Talabat",
-          "games_played": 12,
-          "wins": 0,
-          "podiums": 0,
-          "points": 322,
-          "olympic": 0,
-          "best_place": 6,
-          "avg_points": 26.8
         },
         {
           "name": "Убегаем от Альцгеймера",
@@ -16192,6 +16729,16 @@
           "olympic": 0,
           "best_place": 5,
           "avg_points": 39.0
+        },
+        {
+          "name": "НеЗОЖ",
+          "games_played": 1,
+          "wins": 0,
+          "podiums": 0,
+          "points": 49,
+          "olympic": 0,
+          "best_place": 4,
+          "avg_points": 49.0
         },
         {
           "name": "Рахат-Лукумчики",
@@ -16272,6 +16819,16 @@
           "olympic": 0,
           "best_place": 4,
           "avg_points": 27.0
+        },
+        {
+          "name": "Могучая Кучка",
+          "games_played": 1,
+          "wins": 0,
+          "podiums": 0,
+          "points": 24,
+          "olympic": 0,
+          "best_place": 9,
+          "avg_points": 24.0
         },
         {
           "name": "Щас разрулим",
@@ -16366,7 +16923,8 @@
           "2026-10-11",
           "2026-10-25",
           "2026-11-01",
-          "2026-11-08"
+          "2026-11-08",
+          "2026-11-15"
         ],
         "series": [
           {
@@ -16412,6 +16970,7 @@
               20,
               20,
               20,
+              20,
               20
             ],
             "olympic": [
@@ -16439,6 +16998,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -16501,7 +17061,8 @@
               253,
               279,
               298,
-              322
+              322,
+              349
             ],
             "olympic": [
               null,
@@ -16510,6 +17071,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -16590,6 +17152,7 @@
               78,
               78,
               78,
+              78,
               78
             ],
             "olympic": [
@@ -16623,6 +17186,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -16679,7 +17243,8 @@
               1716,
               1761,
               1799,
-              1831
+              1831,
+              1889
             ],
             "olympic": [
               3,
@@ -16722,7 +17287,8 @@
               53,
               56,
               56,
-              56
+              56,
+              59
             ]
           },
           {
@@ -16768,6 +17334,7 @@
               38,
               38,
               38,
+              38,
               38
             ],
             "olympic": [
@@ -16781,6 +17348,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -16857,7 +17425,8 @@
               1355,
               1399,
               1446,
-              1472
+              1472,
+              1519
             ],
             "olympic": [
               0,
@@ -16899,6 +17468,7 @@
               29,
               31,
               32,
+              35,
               35,
               35
             ]
@@ -16946,6 +17516,7 @@
               31,
               31,
               31,
+              31,
               31
             ],
             "olympic": [
@@ -16976,6 +17547,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -17035,6 +17607,7 @@
               39,
               39,
               39,
+              39,
               39
             ],
             "olympic": [
@@ -17051,6 +17624,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -17124,6 +17698,7 @@
               38,
               38,
               38,
+              38,
               38
             ],
             "olympic": [
@@ -17167,6 +17742,7 @@
               0,
               0,
               0,
+              0,
               0
             ]
           },
@@ -17180,6 +17756,7 @@
               null,
               null,
               null,
+              43,
               43,
               43,
               43,
@@ -17256,6 +17833,98 @@
               0,
               0,
               0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Могучая Кучка",
+            "points": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              24
+            ],
+            "olympic": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               0
             ]
           },
@@ -17302,6 +17971,7 @@
               22,
               22,
               22,
+              22,
               22
             ],
             "olympic": [
@@ -17311,6 +17981,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -17391,6 +18062,7 @@
               27,
               27,
               27,
+              27,
               27
             ],
             "olympic": [
@@ -17434,6 +18106,98 @@
               0,
               0,
               0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "НеЗОЖ",
+            "points": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              49
+            ],
+            "olympic": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               0
             ]
           },
@@ -17480,7 +18244,8 @@
               1519,
               1564,
               1599,
-              1644
+              1644,
+              1688
             ],
             "olympic": [
               1,
@@ -17523,6 +18288,7 @@
               24,
               26,
               26,
+              28,
               28
             ]
           },
@@ -17569,6 +18335,7 @@
               21,
               21,
               21,
+              21,
               21
             ],
             "olympic": [
@@ -17592,6 +18359,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -17658,6 +18426,7 @@
               47,
               47,
               47,
+              47,
               47
             ],
             "olympic": [
@@ -17696,6 +18465,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -17747,6 +18517,7 @@
               324,
               324,
               324,
+              324,
               324
             ],
             "olympic": [
@@ -17773,6 +18544,7 @@
               2,
               3,
               6,
+              9,
               9,
               9,
               9,
@@ -17836,7 +18608,8 @@
               1756,
               1791,
               1831,
-              1878
+              1878,
+              1932
             ],
             "olympic": [
               2,
@@ -17879,7 +18652,8 @@
               61,
               61,
               62,
-              65
+              65,
+              66
             ]
           },
           {
@@ -17925,7 +18699,8 @@
               1533,
               1572,
               1618,
-              1654
+              1654,
+              1710
             ],
             "olympic": [
               null,
@@ -17968,7 +18743,8 @@
               41,
               41,
               43,
-              44
+              44,
+              46
             ]
           },
           {
@@ -18014,6 +18790,7 @@
               164,
               164,
               164,
+              164,
               164
             ],
             "olympic": [
@@ -18025,6 +18802,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -18103,6 +18881,7 @@
               95,
               95,
               95,
+              95,
               95
             ],
             "olympic": [
@@ -18127,6 +18906,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -18192,7 +18972,8 @@
               852,
               888,
               920,
-              951
+              951,
+              999
             ],
             "olympic": [
               0,
@@ -18225,6 +19006,7 @@
               7,
               8,
               8,
+              9,
               9,
               9,
               9,
@@ -18281,9 +19063,11 @@
               150,
               150,
               150,
+              150,
               150
             ],
             "olympic": [
+              0,
               0,
               0,
               0,
@@ -18370,6 +19154,7 @@
               33,
               33,
               33,
+              33,
               33
             ],
             "olympic": [
@@ -18393,6 +19178,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -18459,9 +19245,11 @@
               24,
               24,
               24,
+              24,
               24
             ],
             "olympic": [
+              0,
               0,
               0,
               0,
@@ -18548,6 +19336,7 @@
               22,
               22,
               22,
+              22,
               22
             ],
             "olympic": [
@@ -18585,6 +19374,7 @@
               null,
               null,
               null,
+              0,
               0,
               0,
               0,
@@ -18701,16 +19491,16 @@
       {
         "name": "Talabat",
         "round_avgs": [
-          3.24,
-          3.71,
-          3.0,
-          3.0,
-          6.29,
-          1.53,
-          4.47,
-          0.76
+          3.22,
+          3.5,
+          3.11,
+          2.89,
+          6.5,
+          1.67,
+          4.39,
+          0.78
         ],
-        "games": 17
+        "games": 18
       },
       {
         "name": "А вот и Дима",
@@ -18813,16 +19603,16 @@
       {
         "name": "Даём случайные ответы",
         "round_avgs": [
-          4.53,
-          5.61,
-          4.35,
-          6.6,
-          8.75,
-          3.47,
-          9.23,
-          1.82
+          4.54,
+          5.62,
+          4.36,
+          6.69,
+          8.77,
+          3.51,
+          9.3,
+          1.8
         ],
-        "games": 60
+        "games": 61
       },
       {
         "name": "Джентльмены удачи",
@@ -18869,16 +19659,16 @@
       {
         "name": "Естественный интеллект",
         "round_avgs": [
-          4.7,
+          4.71,
           4.83,
-          4.4,
-          5.8,
+          4.41,
+          5.83,
           7.83,
-          3.0,
-          9.47,
-          1.62
+          3.02,
+          9.56,
+          1.59
         ],
-        "games": 40
+        "games": 41
       },
       {
         "name": "Зелёная команда",
@@ -19021,6 +19811,20 @@
         "games": 2
       },
       {
+        "name": "Могучая Кучка",
+        "round_avgs": [
+          2.0,
+          2.0,
+          3.0,
+          5.0,
+          3.0,
+          2.0,
+          7.0,
+          0.0
+        ],
+        "games": 1
+      },
+      {
         "name": "Мы только посмотреть",
         "round_avgs": [
           4.0,
@@ -19044,6 +19848,20 @@
           6.0,
           2.0,
           5.0,
+          4.0
+        ],
+        "games": 1
+      },
+      {
+        "name": "НеЗОЖ",
+        "round_avgs": [
+          6.0,
+          1.0,
+          3.0,
+          10.0,
+          6.0,
+          4.0,
+          15.0,
           4.0
         ],
         "games": 1
@@ -19079,16 +19897,16 @@
       {
         "name": "Победители Дивана",
         "round_avgs": [
-          4.66,
-          5.04,
+          4.69,
+          5.06,
           3.98,
-          5.3,
-          8.58,
-          2.8,
-          8.34,
-          1.46
+          5.27,
+          8.57,
+          2.82,
+          8.41,
+          1.43
         ],
-        "games": 50
+        "games": 51
       },
       {
         "name": "Психофазотрон",
@@ -19163,30 +19981,30 @@
       {
         "name": "Серпентарий",
         "round_avgs": [
-          4.58,
-          5.45,
-          4.5,
-          6.42,
-          9.03,
-          3.4,
-          10.4,
-          1.98
+          4.61,
+          5.44,
+          4.51,
+          6.39,
+          9.07,
+          3.41,
+          10.46,
+          2.02
         ],
-        "games": 60
+        "games": 61
       },
       {
         "name": "Соль земли",
         "round_avgs": [
-          4.78,
+          4.76,
           5.0,
-          3.82,
-          5.93,
-          8.56,
-          3.02,
-          8.82,
-          2.04
+          3.85,
+          6.0,
+          8.59,
+          3.09,
+          8.98,
+          2.02
         ],
-        "games": 45
+        "games": 46
       },
       {
         "name": "Убегаем от Альцгеймера",
@@ -19219,16 +20037,16 @@
       {
         "name": "Хорошая Компания",
         "round_avgs": [
-          4.61,
+          4.65,
           4.97,
-          3.56,
-          5.33,
-          7.67,
-          2.5,
-          8.03,
-          1.83
+          3.51,
+          5.35,
+          7.65,
+          2.59,
+          8.24,
+          1.78
         ],
-        "games": 36
+        "games": 37
       },
       {
         "name": "Шнур от утюга",
@@ -19303,13 +20121,13 @@
     ],
     "overall_avgs": [
       4.42,
-      4.86,
-      3.9,
-      5.42,
+      4.84,
+      3.91,
+      5.44,
       7.99,
-      2.85,
-      8.38,
-      1.66
+      2.88,
+      8.47,
+      1.65
     ],
     "captain_leader": {
       "name": "А вот и Дима",
